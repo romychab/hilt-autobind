@@ -3,7 +3,7 @@ package com.uandcode.hilt.autobind.compiler
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
-import com.uandcode.hilt.autobind.annotations.HiltComponent
+import com.uandcode.hilt.autobind.HiltComponent
 
 /**
  * Resolves the effective [HiltComponent] for an annotated class by combining

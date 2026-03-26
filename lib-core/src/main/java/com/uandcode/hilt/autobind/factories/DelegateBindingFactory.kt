@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.annotations.factories
+package com.uandcode.hilt.autobind.factories
 
 /**
  * A factory that creates an instance of [T] and exposes its public methods as

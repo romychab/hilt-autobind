@@ -1,8 +1,8 @@
-package com.uandcode.hilt.autobind.annotations.factories
+package com.uandcode.hilt.autobind.factories
 
 /**
  * Marker interface for factory types that can be used with the
- * [com.uandcode.hilt.autobind.annotations.AutoBinds.factory] parameter.
+ * [com.uandcode.hilt.autobind.AutoBinds.factory] parameter.
  *
  * @see ClassBindingFactory
  * @see DelegateBindingFactory

@@ -1,8 +1,8 @@
-package com.uandcode.hilt.autobind.annotations
+package com.uandcode.hilt.autobind
 
-import com.uandcode.hilt.autobind.annotations.factories.BindingFactory
-import com.uandcode.hilt.autobind.annotations.factories.ClassBindingFactory
-import com.uandcode.hilt.autobind.annotations.factories.NoOpBindingFactory
+import com.uandcode.hilt.autobind.factories.BindingFactory
+import com.uandcode.hilt.autobind.factories.ClassBindingFactory
+import com.uandcode.hilt.autobind.factories.NoOpBindingFactory
 import kotlin.reflect.KClass
 
 /**
@@ -23,7 +23,7 @@ import kotlin.reflect.KClass
  * Generates a `@Provides` module that delegates instance creation to the factory.
  *
  * **Delegate factory mode** - annotate a class and provide a
- * [com.uandcode.hilt.autobind.annotations.factories.DelegateBindingFactory]:
+ * [com.uandcode.hilt.autobind.factories.DelegateBindingFactory]:
  * ```
  * @AutoBinds(factory = AppDatabaseFactory::class)
  * abstract class AppDatabase : RoomDatabase() {

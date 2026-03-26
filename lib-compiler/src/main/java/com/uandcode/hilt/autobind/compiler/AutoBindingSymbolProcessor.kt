@@ -16,11 +16,11 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ksp.writeTo
-import com.uandcode.hilt.autobind.annotations.AutoBinds
-import com.uandcode.hilt.autobind.annotations.AutoBindsIntoSet
-import com.uandcode.hilt.autobind.annotations.factories.ClassBindingFactory
-import com.uandcode.hilt.autobind.annotations.factories.DelegateBindingFactory
-import com.uandcode.hilt.autobind.annotations.factories.NoOpBindingFactory
+import com.uandcode.hilt.autobind.AutoBinds
+import com.uandcode.hilt.autobind.AutoBindsIntoSet
+import com.uandcode.hilt.autobind.factories.ClassBindingFactory
+import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
+import com.uandcode.hilt.autobind.factories.NoOpBindingFactory
 import kotlin.reflect.KClass
 
 class AutoBindingSymbolProcessor(

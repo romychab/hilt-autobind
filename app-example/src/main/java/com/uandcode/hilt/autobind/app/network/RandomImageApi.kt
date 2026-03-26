@@ -1,6 +1,6 @@
 package com.uandcode.hilt.autobind.app.network
 
-import com.uandcode.hilt.autobind.annotations.AutoBinds
+import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.app.di.RetrofitBindingFactory
 import retrofit2.http.GET
 import javax.inject.Singleton

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "hilt-autobind"
 
-include(":lib-annotations")
+include(":lib-core")
 include(":lib-compiler")
 include(":app-example")

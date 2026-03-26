@@ -1,7 +1,7 @@
 package com.uandcode.hilt.autobind.app.di
 
-import com.uandcode.hilt.autobind.annotations.factories.AutoScoped
-import com.uandcode.hilt.autobind.annotations.factories.ClassBindingFactory
+import com.uandcode.hilt.autobind.factories.AutoScoped
+import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import retrofit2.Retrofit
 import javax.inject.Inject
 import kotlin.reflect.KClass

@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.annotations
+package com.uandcode.hilt.autobind
 
 /**
  * Generates a Dagger Hilt module that contributes the annotated class into a

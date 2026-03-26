@@ -37,7 +37,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(projects.libAnnotations)
+    implementation(projects.libCore)
     ksp(projects.libCompiler)
 
     implementation(libs.hilt.android)

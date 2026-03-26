@@ -11,8 +11,8 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
-import com.uandcode.hilt.autobind.annotations.factories.AutoScoped
-import com.uandcode.hilt.autobind.annotations.factories.ClassBindingFactory
+import com.uandcode.hilt.autobind.factories.AutoScoped
+import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import dagger.Provides
 import javax.inject.Inject
 

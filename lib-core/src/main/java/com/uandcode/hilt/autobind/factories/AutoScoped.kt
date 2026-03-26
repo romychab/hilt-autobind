@@ -1,6 +1,6 @@
-package com.uandcode.hilt.autobind.annotations.factories
+package com.uandcode.hilt.autobind.factories
 
-import com.uandcode.hilt.autobind.annotations.AutoBinds
+import com.uandcode.hilt.autobind.AutoBinds
 
 /**
  * Marks a factory method so the generated `@Provides` function receives the

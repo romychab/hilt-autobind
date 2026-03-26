@@ -16,8 +16,8 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import com.uandcode.hilt.autobind.annotations.factories.AutoScoped
-import com.uandcode.hilt.autobind.annotations.factories.DelegateBindingFactory
+import com.uandcode.hilt.autobind.factories.AutoScoped
+import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import dagger.Provides
 import javax.inject.Inject
 

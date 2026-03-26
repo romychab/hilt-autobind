@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.annotations
+package com.uandcode.hilt.autobind
 
 /**
  * Specifies which Hilt component the generated module should be installed in.

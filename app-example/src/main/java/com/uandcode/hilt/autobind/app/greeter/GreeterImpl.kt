@@ -1,6 +1,6 @@
 package com.uandcode.hilt.autobind.app.greeter
 
-import com.uandcode.hilt.autobind.annotations.AutoBinds
+import com.uandcode.hilt.autobind.AutoBinds
 import javax.inject.Inject
 
 // No need to write a Hilt module manually.

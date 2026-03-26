@@ -13,7 +13,7 @@ mavenPublishing {
 }
 
 dependencies {
-    implementation(projects.libAnnotations)
+    implementation(projects.libCore)
     implementation(libs.hilt.core)
     implementation(libs.ksp.api)
     implementation(libs.kotlin.poet)

@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.annotations.factories
+package com.uandcode.hilt.autobind.factories
 
 import kotlin.reflect.KClass
 
