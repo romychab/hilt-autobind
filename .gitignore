@@ -2,10 +2,13 @@
 .gradle/
 build/
 
+# Python venv
+.venv/
+
 # Local configuration files (sdk path, credentials, signing keys)
 local.properties
-gradle.properties
-gradle-secret.properties
+/gradle.properties
+/gradle-secret.properties
 
 # Log/OS Files
 *.log

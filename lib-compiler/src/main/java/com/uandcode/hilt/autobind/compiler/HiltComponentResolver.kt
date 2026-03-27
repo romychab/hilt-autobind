@@ -40,36 +40,50 @@ internal class HiltComponentResolver(
     ): Result? {
         val classScopeAnnotation = findScopeAnnotation(annotatedClass)
 
-        if (declaredComponent == HiltComponent.Unspecified) {
-            val resolved = if (classScopeAnnotation != null) {
-                resolveFromScope(classScopeAnnotation, annotatedClass, annotationName)
-                    ?: return null
-            } else {
-                HiltComponent.Singleton
-            }
-            return Result(
-                hiltComponentClassName = ClassName.bestGuess(resolved.componentClass),
-                scopeClassName = ClassName.bestGuess(resolved.scopeClass),
+        return if (declaredComponent == HiltComponent.Unspecified) {
+            resolveUnspecifiedComponent(classScopeAnnotation, annotatedClass, annotationName)
+        } else if (classScopeAnnotation != null && classScopeAnnotation != declaredComponent.scopeClass) {
+            handleNonMatchingExplicitComponents(declaredComponent, classScopeAnnotation, annotatedClass, annotationName)
+        } else {
+            Result(
+                hiltComponentClassName = ClassName.bestGuess(declaredComponent.componentClass),
+                scopeClassName = ClassName.bestGuess(declaredComponent.scopeClass),
             )
         }
+    }
 
+    private fun resolveUnspecifiedComponent(
+        classScopeAnnotation: String?,
+        annotatedClass: KSClassDeclaration,
+        annotationName: String,
+    ): Result? {
+        val resolved = if (classScopeAnnotation != null) {
+            resolveFromScope(classScopeAnnotation, annotatedClass, annotationName) ?: return null
+        } else {
+            HiltComponent.Singleton
+        }
+        return Result(
+            hiltComponentClassName = ClassName.bestGuess(resolved.componentClass),
+            scopeClassName = ClassName.bestGuess(resolved.scopeClass),
+        )
+    }
+
+    private fun handleNonMatchingExplicitComponents(
+        declaredComponent: HiltComponent,
+        classScopeAnnotation: String,
+        annotatedClass: KSClassDeclaration,
+        annotationName: String,
+    ): Result? {
         // Explicit component: validate scope match if class has a scope annotation
-        if (classScopeAnnotation != null && classScopeAnnotation != declaredComponent.scopeClass) {
-            val scopeSimpleName = classScopeAnnotation.substringAfterLast('.')
-            val expectedScopeSimpleName = declaredComponent.scopeClass.substringAfterLast('.')
-            logger.error(
-                "@$annotationName: class '${annotatedClass.simpleName.asString()}' is scoped " +
+        val scopeSimpleName = classScopeAnnotation.substringAfterLast('.')
+        val expectedScopeSimpleName = declaredComponent.scopeClass.substringAfterLast('.')
+        logger.error(
+            "@$annotationName: class '${annotatedClass.simpleName.asString()}' is scoped " +
                     "with @$scopeSimpleName but installIn targets " +
                     "${declaredComponent.name} (expected @$expectedScopeSimpleName)",
-                annotatedClass,
-            )
-            return null
-        }
-
-        return Result(
-            hiltComponentClassName = ClassName.bestGuess(declaredComponent.componentClass),
-            scopeClassName = ClassName.bestGuess(declaredComponent.scopeClass),
+            annotatedClass,
         )
+        return null
     }
 
     /**
@@ -109,8 +123,9 @@ internal class HiltComponentResolver(
         /** Map from scope annotation qualified name to [HiltComponent]. */
         val SCOPE_TO_COMPONENT: Map<String, HiltComponent> = buildMap {
             for (component in HiltComponent.entries) {
-                if (component == HiltComponent.Unspecified) continue
-                if (component == HiltComponent.ViewWithFragment) continue // @ViewScoped maps to View
+                if (component == HiltComponent.Unspecified
+                    // @ViewScoped maps to View
+                    || component == HiltComponent.ViewWithFragment) continue
                 putIfAbsent(component.scopeClass, component)
             }
         }

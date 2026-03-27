@@ -13,8 +13,6 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.ksp.toClassName
-import com.squareup.kotlinpoet.ksp.toTypeName
 import dagger.Binds
 import javax.inject.Inject
 
@@ -23,8 +21,8 @@ import javax.inject.Inject
  * for each directly implemented interface.
  */
 internal class DefaultModuleGenerator(
-    private val logger: KSPLogger,
-) {
+    logger: KSPLogger,
+) : AbstractModuleGenerator(logger) {
 
     fun generate(
         moduleInfo: ModuleInfo,
@@ -32,7 +30,7 @@ internal class DefaultModuleGenerator(
     ): TypeSpec? = with(moduleInfo) {
 
         if (targetInterfaces.isEmpty()) {
-            logError("must implement at least one interface", annotatedClass)
+            logNoImplementedInterfaces(annotatedClass)
             return null
         }
 
@@ -42,7 +40,7 @@ internal class DefaultModuleGenerator(
         }
 
         if (annotatedClass.isAbstract()) {
-            logError("must be a final non-abstract class", annotatedClass)
+            logError("must be a non-abstract class", annotatedClass)
             return null
         }
 
@@ -58,45 +56,23 @@ internal class DefaultModuleGenerator(
             .interfaceBuilder(className = moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
-                addBindFunctions(originClassName, targetInterfaces)
+                addBindFunctions(annotatedClass, originClassName, targetInterfaces)
             }
             .build()
     }
 
     private fun TypeSpec.Builder.addBindFunctions(
+        annotatedClass: KSClassDeclaration,
         originClassName: ClassName,
         targetInterfaces: List<KSType>,
-    ) {
-        val classNames = targetInterfaces.map { (it.declaration as KSClassDeclaration).toClassName() }
-        val duplicateSimpleNames = classNames
-            .groupBy { it.simpleName }
-            .filterValues { it.size > 1 }
-            .keys
-
-        for ((index, targetInterface) in targetInterfaces.withIndex()) {
-            val interfaceClassName = classNames[index]
-            val interfaceTypeName = targetInterface.toTypeName()
-            val functionName = if (interfaceClassName.simpleName in duplicateSimpleNames) {
-                "bindTo${interfaceClassName.simpleName}_${interfaceClassName.packageName.replace('.', '_')}"
-            } else {
-                "bindTo${interfaceClassName.simpleName}"
-            }
-
-            val funSpec = FunSpec.builder(functionName)
-                .addParameter(name = "impl", type = originClassName)
-                .addAnnotation(Binds::class)
-                .addModifiers(KModifier.ABSTRACT)
-                .returns(interfaceTypeName)
-                .build()
-            addFunction(funSpec)
-        }
+    ) = forEachTargetInterface(annotatedClass, targetInterfaces) {
+        val funSpec = FunSpec.builder(it.functionName)
+            .addParameter(name = "impl", type = originClassName)
+            .addAnnotation(Binds::class)
+            .addModifiers(KModifier.ABSTRACT)
+            .returns(it.interfaceTypeName)
+            .build()
+        addFunction(funSpec)
     }
 
-    private fun logError(message: String, annotatedClass: KSClassDeclaration) {
-        logger.error(
-            message = "The class '${annotatedClass.simpleName.asString()}' annotated with " +
-                "@AutoBinds annotation $message",
-            symbol = annotatedClass,
-        )
-    }
 }

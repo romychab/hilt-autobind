@@ -64,7 +64,11 @@ class AutoBindingSymbolProcessor(
     private fun processAutoBinds(annotatedClass: KSClassDeclaration) {
         val annotation = annotatedClass
             .getAnnotationsByType(AutoBinds::class)
-            .first()
+            .firstOrNull()
+        if (annotation == null) {
+            logger.error("Can't find AutoBinds annotation for class ${annotatedClass.simpleName}", annotatedClass)
+            return
+        }
 
         val resolved = componentResolver.resolve(
             declaredComponent = annotation.installIn,
@@ -85,6 +89,7 @@ class AutoBindingSymbolProcessor(
             )
             is ModuleType.DelegateFactory -> delegateFactoryModuleGenerator.generate(
                 moduleInfo = moduleInfo,
+                annotatedClass = annotatedClass,
                 factoryDeclaration = moduleType.factoryDeclaration,
             )
             ModuleType.Default -> defaultModuleGenerator.generate(
@@ -100,7 +105,13 @@ class AutoBindingSymbolProcessor(
     private fun processAutoBindsIntoSet(annotatedClass: KSClassDeclaration) {
         val annotation = annotatedClass
             .getAnnotationsByType(AutoBindsIntoSet::class)
-            .first()
+            .firstOrNull() ?: run {
+                logger.error(
+                    "Can't find AutoBindsIntoSet annotation for class ${annotatedClass.simpleName}",
+                    annotatedClass
+                )
+                return
+            }
 
         val resolved = componentResolver.resolve(
             declaredComponent = annotation.installIn,
@@ -132,12 +143,12 @@ class AutoBindingSymbolProcessor(
             val fileSpec = FileSpec.builder(moduleInfo.moduleClassName)
                 .addType(hiltModuleTypeSpec)
                 .build()
-
+            val sources = listOfNotNull(annotatedClass.containingFile)
             fileSpec.writeTo(
                 codeGenerator = codeGenerator,
                 dependencies = Dependencies(
                     aggregating = false,
-                    requireNotNull(annotatedClass.containingFile),
+                    *sources.toTypedArray(),
                 )
             )
         }
@@ -152,36 +163,25 @@ class AutoBindingSymbolProcessor(
      * [ClassBindingFactory].
      */
     private fun getModuleType(annotatedClass: KSClassDeclaration): ModuleType? {
-        val ksType = annotatedClass
-            .annotations
-            .firstOrNull { it.shortName.asString() == AUTOBINDS_NAME }
-            ?.arguments
-            ?.firstOrNull { it.name?.asString() == FACTORY_ARG_NAME }
-            ?.value as? KSType
-
-        if (ksType == null) return ModuleType.Default
-        val factoryDeclaration = ksType.declaration as? KSClassDeclaration ?: return ModuleType.Default
-        if (ksType.declaration.qualifiedName?.asString() == NoOpBindingFactory::class.qualifiedName) {
-            return ModuleType.Default
-        }
-
-        val superTypeNames = factoryDeclaration.superTypes
-            .map { it.resolve().declaration.qualifiedName?.asString() }
-            .toList()
-
-        if (ClassBindingFactory::class.qualifiedName in superTypeNames) {
-            return ModuleType.ClassFactory(factoryDeclaration)
-        }
-
-        if (DelegateBindingFactory::class.qualifiedName in superTypeNames) {
-            return ModuleType.DelegateFactory(factoryDeclaration)
-        }
-
-        logger.error(
-            "AutoBinds Factory class must directly implement ClassBindingFactory or DelegateBindingFactory",
-            annotatedClass,
-        )
-        return null
+        return findFactoryKType(annotatedClass)
+            ?.let { it.declaration as? KSClassDeclaration }
+            ?.takeIf { it.qualifiedName?.asString() != NoOpBindingFactory::class.qualifiedName }
+            ?.let { factoryDeclaration ->
+                val superTypeNames = factoryDeclaration.superTypes
+                    .map { it.resolve().declaration.qualifiedName?.asString() }
+                    .toList()
+                if (ClassBindingFactory::class.qualifiedName in superTypeNames) {
+                    ModuleType.ClassFactory(factoryDeclaration)
+                } else if (DelegateBindingFactory::class.qualifiedName in superTypeNames) {
+                    ModuleType.DelegateFactory(factoryDeclaration)
+                } else {
+                    logger.error(
+                        "AutoBinds Factory class must directly implement ClassBindingFactory or DelegateBindingFactory",
+                        annotatedClass,
+                    )
+                    return null
+                }
+            } ?: ModuleType.Default
     }
 
     private fun KSClassDeclaration.getTargetInterfaces(): List<KSType> {
@@ -189,6 +189,15 @@ class AutoBindingSymbolProcessor(
             .map { it.resolve() }
             .filter { (it.declaration as? KSClassDeclaration)?.classKind == ClassKind.INTERFACE }
             .toList()
+    }
+
+    private fun findFactoryKType(annotatedClass: KSClassDeclaration): KSType? {
+        return annotatedClass
+            .annotations
+            .firstOrNull { it.shortName.asString() == AUTOBINDS_NAME }
+            ?.arguments
+            ?.firstOrNull { it.name?.asString() == FACTORY_ARG_NAME }
+            ?.value as? KSType
     }
 
     private companion object {

@@ -21,14 +21,14 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val subject = LazyFlowSubject.create {
-        delay(1000)
+        delay(DELAY_TIMEOUT)
         emit(randomImageApi.getRandomImage())
     }
 
     val responseFlow = subject.listenReloadable()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000, 5000),
+            started = DefaultSharingStarted,
             initialValue = pendingContainer(),
         )
 
@@ -39,3 +39,8 @@ class MainViewModel @Inject constructor(
     }
 
 }
+
+private val DefaultSharingStarted = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT, SUBSCRIPTION_TIMEOUT)
+
+private const val DELAY_TIMEOUT = 1000L
+private const val SUBSCRIPTION_TIMEOUT = 5000L

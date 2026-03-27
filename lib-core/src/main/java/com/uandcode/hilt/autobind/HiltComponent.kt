@@ -64,7 +64,13 @@ public enum class HiltComponent(
         scopeClass = "dagger.hilt.android.scopes.ViewScoped",
     ),
 
-    /** Scoped to a view that is associated with a fragment. */
+    /**
+     * Scoped to a view that is associated with a fragment.
+     *
+     * Note: `@ViewScoped` auto-detection resolves to [View], not [ViewWithFragment],
+     * because both components share the same scope annotation.
+     * Use `installIn = HiltComponent.ViewWithFragment` explicitly when targeting this component.
+     */
     ViewWithFragment(
         componentClass = "dagger.hilt.android.components.ViewWithFragmentComponent",
         scopeClass = "dagger.hilt.android.scopes.ViewScoped",

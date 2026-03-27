@@ -24,5 +24,5 @@ import com.uandcode.hilt.autobind.AutoBinds
  * method will also carry `@Singleton`.
  */
 @Target(AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.SOURCE)
 public annotation class AutoScoped
