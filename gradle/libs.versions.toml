@@ -13,7 +13,11 @@ coil = "3.4.0"
 kotlinxSerialization = "1.8.1"
 lifecycleViewmodel = "2.10.0"
 container = "2.0.0-beta15"
-room = "2.7.1"
+room = "2.8.4"
+kctfork = "0.12.1"
+junit = "5.12.2"
+dokka = "2.2.0"
+detekt = "1.23.8"
 
 [libraries]
 hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
@@ -39,6 +43,10 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+kctfork-core = { module = "dev.zacsweers.kctfork:core", version.ref = "kctfork" }
+kctfork-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref = "kctfork" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -48,3 +56,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
