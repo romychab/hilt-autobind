@@ -7,8 +7,8 @@ package com.uandcode.hilt.autobind.factories
  * Implement this interface and annotate the implementation with `@Inject` to
  * use it with `@AutoBinds(factory = ...)`. The generated Hilt module will:
  * 1. Call [provideDelegate] to provide [T].
- * 2. For each public non-Unit-returning method declared on [T], generate a
- *    `@Provides` function that delegates to that method.
+ * 2. For each public zero-argument non-Unit-returning method declared on [T],
+ *    generate a `@Provides` function that delegates to that method.
  *
  * The implementation must be a final, non-abstract class with no type parameters
  * (specify the concrete type on the parent interface).

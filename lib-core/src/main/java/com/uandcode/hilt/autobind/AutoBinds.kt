@@ -31,7 +31,7 @@ import kotlin.reflect.KClass
  * }
  * ```
  * Generates a `@Provides` module for the class itself and for each public
- * non-Unit-returning method declared on it.
+ * zero-argument non-Unit-returning method declared on it.
  *
  * @param installIn the Hilt component to install the generated module in.
  *   Defaults to [HiltComponent.Unspecified], which auto-detects the component from
