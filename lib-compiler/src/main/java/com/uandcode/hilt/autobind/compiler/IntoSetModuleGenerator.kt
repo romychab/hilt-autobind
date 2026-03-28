@@ -9,6 +9,7 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -35,13 +36,18 @@ internal class IntoSetModuleGenerator(
         targetInterfaces: List<KSType>,
     ): TypeSpec? = with(moduleInfo) {
 
-        if (targetInterfaces.isEmpty()) {
-            logError("must implement at least one interface", annotatedClass)
+        if (annotatedClass.classKind != ClassKind.CLASS) {
+            logError("must be a class (not object, interface, etc.)", annotatedClass)
             return null
         }
 
-        if (annotatedClass.classKind != ClassKind.CLASS) {
-            logError("must be a class (not object, interface, etc.)", annotatedClass)
+        if (Modifier.INNER in annotatedClass.modifiers) {
+            logError("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
+            return null
+        }
+
+        if (targetInterfaces.isEmpty()) {
+            logError("must implement at least one interface", annotatedClass)
             return null
         }
 

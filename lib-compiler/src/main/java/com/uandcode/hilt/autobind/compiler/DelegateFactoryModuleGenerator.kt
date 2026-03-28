@@ -58,6 +58,17 @@ internal class DelegateFactoryModuleGenerator(
             .filter { isNonUnitReturn(it) }
             .toList()
 
+        for (method in delegateMethods) {
+            if (method.isAnnotationPresent(AutoScoped::class)) {
+                logger.warn(
+                    "@AutoScoped on '${method.simpleName.asString()}()' is ignored. " +
+                        "Place @AutoScoped on ${factoryDeclaration.simpleName.asString()}.provideDelegate() " +
+                        "to scope the delegate instance.",
+                    method,
+                )
+            }
+        }
+
         val builder = TypeSpec.objectBuilder(moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
 

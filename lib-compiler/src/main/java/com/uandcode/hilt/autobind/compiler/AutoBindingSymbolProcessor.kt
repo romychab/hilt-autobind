@@ -176,8 +176,9 @@ class AutoBindingSymbolProcessor(
                     ModuleType.DelegateFactory(factoryDeclaration)
                 } else {
                     logger.error(
-                        "AutoBinds Factory class must directly implement ClassBindingFactory or DelegateBindingFactory",
-                        annotatedClass,
+                        "AutoBinds Factory class '${factoryDeclaration.simpleName.asString()}' " +
+                                "must directly implement ClassBindingFactory or DelegateBindingFactory",
+                        factoryDeclaration,
                     )
                     return null
                 }
