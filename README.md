@@ -1,12 +1,18 @@
 # Hilt AutoBind
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.uandcode/hilt-autobind.svg)](https://central.sonatype.com/search?q=g:com.uandcode+a:hilt-autobind-*)
+[![Maven Central](https://img.shields.io/maven-central/v/com.uandcode/hilt-autobind.svg?label=Maven%20Central)](https://central.sonatype.com/search?q=g:com.uandcode+a:hilt-autobind-*)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![PR Check](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml/badge.svg)](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml)
 [![Publish](https://github.com/romychab/hilt-autobind/actions/workflows/publish.yml/badge.svg)](https://github.com/romychab/hilt-autobind/actions/workflows/publish.yml)
 
 Auto-generate Dagger Hilt binding modules with a single annotation. Stop writing
 repetitive `@Module` / `@Binds` / `@Provides` boilerplate.
+
+<!-- docs-exclude-start -->
+## Documentation
+
+Full documentation is available [here](https://docs.uandcode.com/hilt-autobinds).
+<!-- docs-exclude-end -->
 
 ## Quick Start
 
