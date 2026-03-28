@@ -1,0 +1,29 @@
+site_name: Hilt AutoBind
+site_description: Auto-generate Dagger Hilt binding modules with a single annotation
+site_url: https://docs.uandcode/hilt-autobind/
+repo_url: https://github.com/romychab/hilt-autobind
+repo_name: romychab/hilt-autobind
+
+docs_dir: build/mkdocs-src
+site_dir: build/mkdocs
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Basic Usage: basic-usage.md
+  - Scopes & Components: scopes-and-components.md
+  - Class Factory: class-factory.md
+  - Delegate Factory: delegate-factory.md
+  - Multibinding: multibinding.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
