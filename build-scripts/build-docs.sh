@@ -21,7 +21,8 @@ mkdir -p "$STAGING_DIR"
 # Copy README.md as index.md.
 # README links to docs files using the 'docs/' prefix (e.g., docs/installation.md).
 # In the staging flat structure all files are at the same level, so strip that prefix.
-sed 's|(\(docs/\)|(|g' README.md > "$STAGING_DIR/index.md"
+sed '/<!-- docs-exclude-start -->/,/<!-- docs-exclude-end -->/d' README.md \
+    | sed 's|(\(docs/\)|(|g' > "$STAGING_DIR/index.md"
 
 # copy all docs pages into the staging directory (flat, no subdirectory)
 cp docs/*.md "$STAGING_DIR/"
