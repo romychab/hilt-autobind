@@ -6,6 +6,8 @@ on:
     paths:
       - 'lib-core/**'
       - 'lib-compiler/**'
+      - 'gradle/**'
+      - 'build.gradle.kts'
 
 concurrency:
   group: publish
