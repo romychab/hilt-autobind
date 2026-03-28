@@ -11,7 +11,7 @@ repetitive `@Module` / `@Binds` / `@Provides` boilerplate.
 <!-- docs-exclude-start -->
 ## Documentation
 
-Full documentation is available [here](https://docs.uandcode.com/hilt-autobinds).
+Full documentation is available [here](https://docs.uandcode.com/hilt-autobind/).
 <!-- docs-exclude-end -->
 
 ## Quick Start
