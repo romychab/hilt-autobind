@@ -2,6 +2,8 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.uandcode/hilt-autobind.svg)](https://central.sonatype.com/search?q=g:com.uandcode+a:hilt-autobind-*)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![PR Check](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml/badge.svg)](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml)
+[![Publish](https://github.com/romychab/hilt-autobind/actions/workflows/publish.yml/badge.svg)](https://github.com/romychab/hilt-autobind/actions/workflows/publish.yml)
 
 Auto-generate Dagger Hilt binding modules with a single annotation. Stop writing
 repetitive `@Module` / `@Binds` / `@Provides` boilerplate.
@@ -12,8 +14,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.1.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.1.0")
+    implementation("com.uandcode:hilt-autobind:0.1.1")
+    ksp("com.uandcode:hilt-autobind-compiler:0.1.1")
 }
 ```
 
