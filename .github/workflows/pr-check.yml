@@ -47,6 +47,12 @@ jobs:
       - name: Build and test library modules
         run: ./gradlew :lib-core:build :lib-compiler:build
 
+      - name: Generate coverage report
+        run: ./gradlew :lib-compiler:jacocoTestReport
+
+      - name: Check coverage
+        run: bash build-scripts/check-coverage.sh 80
+
       - name: Build example app
         run: ./gradlew :app-example:assembleDebug
 

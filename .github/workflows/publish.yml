@@ -1,4 +1,4 @@
-name: Publish to Maven Central
+name: Publish
 
 on:
   push:
@@ -27,8 +27,14 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Run tests
-        run: ./gradlew :lib-core:test :lib-compiler:test
+      - name: Run tests and generate coverage report
+        run: ./gradlew :lib-core:test :lib-compiler:jacocoTestReport
+
+      - name: Update coverage badge
+        env:
+          GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
+          GIST_ID: ${{ secrets.COVERAGE_GIST_ID }}
+        run: bash build-scripts/update-coverage-badge.sh
 
       - name: Publish to Maven Central (staging)
         run: ./gradlew publishAllPublicationsToMavenCentralRepository
