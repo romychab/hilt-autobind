@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install MkDocs
-        run: pip install mkdocs==1.6.1 mkdocs-material==9.7.6
+        run: pip install mkdocs==1.6.1 mkdocs-material==9.7.6 pymdown-extensions==10.21.2 pygments==2.20.0
 
       - name: Build documentation
         run: bash build-scripts/build-docs.sh
