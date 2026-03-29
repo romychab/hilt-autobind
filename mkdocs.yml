@@ -19,6 +19,7 @@ nav:
   - Delegate Factory: delegate-factory.md
   - Multibinding: multibinding.md
   - Annotation Aliases: annotation-aliases.md
+  - Multi-Module Projects: multi-module.md
 
 markdown_extensions:
   - admonition

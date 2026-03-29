@@ -28,8 +28,8 @@ interface UserApi { /* ... */ }
 interface PostApi { /* ... */ }
 
 // After
-@AutoBinds(factory = RetrofitBindingFactory::class)
 @Target(AnnotationTarget.CLASS)
+@AutoBinds(factory = RetrofitBindingFactory::class)
 annotation class BindRetrofit
 
 @BindRetrofit
@@ -158,7 +158,7 @@ annotation class MyBind
 class RepoAImpl @Inject constructor() : RepoA
 
 @MyBind
-class RepoBImpl @Inject constructor() : RepoBImpl
+class RepoBImpl @Inject constructor() : RepoB
 ```
 
 This generates `RepoAImplModule.kt` and `RepoBImplModule.kt` as separate files,

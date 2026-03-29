@@ -7,7 +7,7 @@ import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -43,7 +43,8 @@ internal class ClassFactoryModuleGenerator(
 
         // Check if create() is annotated with @AutoScoped
         val createMethod = factoryDeclaration.getDeclaredFunctions()
-            .firstOrNull { it.simpleName.asString() == CREATE_METHOD && it.modifiers.contains(Modifier.OVERRIDE) }
+            .firstOrNull { it.simpleName.asString() == CREATE_METHOD &&
+                    it.parameters.singleOrNull()?.isKClassType() == true }
         val isAutoScoped = createMethod
             ?.isAnnotationPresent(AutoScoped::class) == true
 
@@ -61,6 +62,11 @@ internal class ClassFactoryModuleGenerator(
                     .build()
             )
             .build()
+    }
+
+    private fun KSValueParameter.isKClassType(): Boolean {
+        return type.resolve().declaration.qualifiedName?.asString() ==
+                "kotlin.reflect.KClass"
     }
 
     private companion object {
