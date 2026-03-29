@@ -9,6 +9,7 @@ on:
       - 'mkdocs.yml'
       - 'build-scripts/build-docs.sh'
       - 'build-scripts/deploy-docs.sh'
+  workflow_dispatch:
 
 jobs:
   deploy-docs:
