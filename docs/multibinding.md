@@ -86,5 +86,5 @@ internal interface LoggingInterceptor__IntoSetModule {
 ```
 
 The same class requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes)
-apply: the class must be concrete, non-abstract, final, have `@Inject` on its
+apply: the class must be concrete, non-abstract, not an inner class, have `@Inject` on its
 primary constructor, and implement at least one interface.

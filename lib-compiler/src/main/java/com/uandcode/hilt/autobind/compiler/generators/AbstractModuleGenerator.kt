@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.generators
 
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -6,14 +6,13 @@ import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
-import com.uandcode.hilt.autobind.AutoBinds
+import com.uandcode.hilt.autobind.compiler.ModuleInfo
 
-abstract class AbstractModuleGenerator(
+internal abstract class AbstractModuleGenerator(
     protected val logger: KSPLogger,
-    private val annotationName: String = requireNotNull(AutoBinds::class.simpleName),
 ) {
 
-    protected fun logError(message: String, annotatedClass: KSClassDeclaration) {
+    protected fun ModuleInfo.logError(message: String, annotatedClass: KSClassDeclaration) {
         logger.error(
             message = "The class '${annotatedClass.simpleName.asString()}' annotated with " +
                     "@$annotationName annotation $message",
@@ -22,10 +21,10 @@ abstract class AbstractModuleGenerator(
     }
 
     protected fun forEachTargetInterface(
-        annotatedClass: KSClassDeclaration,
+        moduleInfo: ModuleInfo,
         targetInterfaces: List<KSType>,
         block: (TargetInterface) -> Unit,
-    ) {
+    ) = with(moduleInfo) {
         val classNames = targetInterfaces.mapNotNull { (it.declaration as? KSClassDeclaration)?.toClassName() }
         if (classNames.isEmpty()) {
             logNoImplementedInterfaces(annotatedClass)
@@ -48,7 +47,7 @@ abstract class AbstractModuleGenerator(
         }
     }
 
-    protected fun logNoImplementedInterfaces(annotatedClass: KSClassDeclaration) {
+    protected fun ModuleInfo.logNoImplementedInterfaces(annotatedClass: KSClassDeclaration) {
         logError("must implement at least one interface", annotatedClass)
     }
 

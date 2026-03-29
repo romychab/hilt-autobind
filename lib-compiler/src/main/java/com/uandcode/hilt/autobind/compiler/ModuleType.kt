@@ -6,8 +6,12 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
  * Represents the kind of Hilt module to generate.
  */
 internal sealed class ModuleType {
+
     /** Generate an interface with `@Binds` functions. */
     data object Default : ModuleType()
+
+    /** Generate an interface with `@Binds` and `@IntoSet` functions. */
+    data object IntoSet : ModuleType()
 
     /** Generate an object with a `@Provides` function that delegates to a factory. */
     data class ClassFactory(
@@ -18,4 +22,5 @@ internal sealed class ModuleType {
     data class DelegateFactory(
         val factoryDeclaration: KSClassDeclaration,
     ) : ModuleType()
+
 }

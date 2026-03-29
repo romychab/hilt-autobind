@@ -1,34 +1,33 @@
 @file:OptIn(KspExperimental::class)
 
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.generators
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import dagger.Binds
+import dagger.multibindings.IntoSet
 import javax.inject.Inject
 
 /**
- * Generates an interface-based Hilt module with `@Binds` functions
- * for each directly implemented interface.
+ * Generates an interface-based Hilt module with `@Binds @IntoSet` functions
+ * for each directly implemented interface, contributing the class to a
+ * multibinding `Set`.
  */
-internal class DefaultModuleGenerator(
+internal class IntoSetModuleGenerator(
     logger: KSPLogger,
-) : AbstractModuleGenerator(logger) {
+) : AbstractModuleGenerator(logger = logger) {
 
-    fun generate(
-        moduleInfo: ModuleInfo,
-        targetInterfaces: List<KSType>,
-    ): TypeSpec? = with(moduleInfo) {
+    fun generate(moduleInfo: ModuleInfo): TypeSpec? = with(moduleInfo) {
 
         if (annotatedClass.classKind != ClassKind.CLASS) {
             logError("must be a class (not object, interface, etc.)", annotatedClass)
@@ -40,13 +39,14 @@ internal class DefaultModuleGenerator(
             return null
         }
 
+        val targetInterfaces = annotatedClass.getTargetInterfaces()
         if (targetInterfaces.isEmpty()) {
-            logNoImplementedInterfaces(annotatedClass)
+            logError("must implement at least one interface", annotatedClass)
             return null
         }
 
         if (annotatedClass.isAbstract()) {
-            logError("must be a non-abstract class", annotatedClass)
+            logError("must be a final non-abstract class", annotatedClass)
             return null
         }
 
@@ -62,19 +62,20 @@ internal class DefaultModuleGenerator(
             .interfaceBuilder(className = moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
-                addBindFunctions(annotatedClass, originClassName, targetInterfaces)
+                addBindIntoSetFunctions(moduleInfo, originClassName, targetInterfaces)
             }
             .build()
     }
 
-    private fun TypeSpec.Builder.addBindFunctions(
-        annotatedClass: KSClassDeclaration,
+    private fun TypeSpec.Builder.addBindIntoSetFunctions(
+        moduleInfo: ModuleInfo,
         originClassName: ClassName,
         targetInterfaces: List<KSType>,
-    ) = forEachTargetInterface(annotatedClass, targetInterfaces) {
+    ) = forEachTargetInterface(moduleInfo, targetInterfaces) {
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
+            .addAnnotation(IntoSet::class)
             .addModifiers(KModifier.ABSTRACT)
             .returns(it.interfaceTypeName)
             .build()

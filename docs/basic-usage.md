@@ -117,6 +117,7 @@ A class annotated with `@AutoBinds` (in default mode, without a `factory`) must:
 
 - Be a **concrete class** (not an interface, object, or enum).
 - Be **non-abstract** (no `abstract` modifier).
+- **Not be an inner class** (no `inner` modifier).
 - Have a **primary constructor annotated with `@Inject`**.
 - Implement **at least one interface**.
 

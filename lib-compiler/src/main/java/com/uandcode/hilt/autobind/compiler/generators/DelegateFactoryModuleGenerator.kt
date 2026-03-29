@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.generators
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAbstract
@@ -17,6 +17,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
+import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.factories.AutoScoped
 import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import dagger.Provides
@@ -35,11 +36,10 @@ internal class DelegateFactoryModuleGenerator(
 
     fun generate(
         moduleInfo: ModuleInfo,
-        annotatedClass: KSClassDeclaration,
         factoryDeclaration: KSClassDeclaration,
     ): TypeSpec? = with(moduleInfo) {
 
-        if (!validateFactory(factoryDeclaration, annotatedClass)) return null
+        if (!validateFactory(factoryDeclaration, moduleInfo.annotatedClass)) return null
 
         val factoryClassName = factoryDeclaration.toClassName()
 
@@ -106,7 +106,7 @@ internal class DelegateFactoryModuleGenerator(
     }
 
     @Suppress("ReturnCount")
-    private fun validateFactory(
+    private fun ModuleInfo.validateFactory(
         factoryDeclaration: KSClassDeclaration,
         annotatedClass: KSClassDeclaration,
     ): Boolean {

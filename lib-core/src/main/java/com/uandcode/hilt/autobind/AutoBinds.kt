@@ -38,7 +38,7 @@ import kotlin.reflect.KClass
  *   the scope annotation on the class (falls back to [HiltComponent.Singleton] if unscoped).
  * @param factory optional [BindingFactory] to use for creating instances.
  */
-@Target(AnnotationTarget.CLASS)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.SOURCE)
 public annotation class AutoBinds(
     val installIn: HiltComponent = HiltComponent.Unspecified,
