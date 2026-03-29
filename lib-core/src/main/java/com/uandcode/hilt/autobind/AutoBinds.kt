@@ -39,7 +39,7 @@ import kotlin.reflect.KClass
  * @param factory optional [BindingFactory] to use for creating instances.
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
 public annotation class AutoBinds(
     val installIn: HiltComponent = HiltComponent.Unspecified,
     val factory: KClass<out BindingFactory> = NoOpBindingFactory::class,

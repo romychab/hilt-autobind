@@ -11,11 +11,13 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.uandcode.hilt.autobind.compiler.generators.ClassFactoryModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.DefaultModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.DelegateFactoryModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.IntoSetModuleGenerator
+import com.uandcode.hilt.autobind.compiler.generators.MetadataGenerator
 
 class AutoBindingSymbolProcessor(
     private val logger: KSPLogger,
@@ -27,6 +29,7 @@ class AutoBindingSymbolProcessor(
     private val classFactoryModuleGenerator = ClassFactoryModuleGenerator(logger)
     private val delegateFactoryModuleGenerator = DelegateFactoryModuleGenerator(logger)
     private val intoSetModuleGenerator = IntoSetModuleGenerator(logger)
+    private val metadataGenerator = MetadataGenerator(codeGenerator)
 
     private val annotatedSymbolsResolver = AnnotatedSymbolsResolver(
         logger, componentResolver,
@@ -35,7 +38,8 @@ class AutoBindingSymbolProcessor(
     override fun process(resolver: Resolver): List<KSAnnotated> {
         return annotatedSymbolsResolver.processAnnotatedSymbols(
             resolver = resolver,
-            handler = ::buildHiltModule,
+            onGenerateHiltModule = ::buildHiltModule,
+            onGenerateMetaAutoBinding = metadataGenerator::buildMetadataCarrier,
         )
     }
 
@@ -62,7 +66,7 @@ class AutoBindingSymbolProcessor(
     }
 
     private fun writeModule(
-        hiltModuleTypeSpec: com.squareup.kotlinpoet.TypeSpec?,
+        hiltModuleTypeSpec: TypeSpec?,
         moduleInfo: ModuleInfo,
         annotationSource: KSClassDeclaration = moduleInfo.annotationSource,
     ) {
@@ -86,3 +90,5 @@ class AutoBindingSymbolProcessor(
     }
 
 }
+
+internal const val METADATA_PACKAGE = "com.uandcode.hilt.autobind.metadata"
