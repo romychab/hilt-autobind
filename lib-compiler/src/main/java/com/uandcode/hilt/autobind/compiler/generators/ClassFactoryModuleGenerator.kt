@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.generators
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredFunctions
@@ -11,6 +11,7 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.factories.AutoScoped
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import dagger.Provides

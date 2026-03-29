@@ -18,6 +18,7 @@ nav:
   - Class Factory: class-factory.md
   - Delegate Factory: delegate-factory.md
   - Multibinding: multibinding.md
+  - Annotation Aliases: annotation-aliases.md
 
 markdown_extensions:
   - admonition

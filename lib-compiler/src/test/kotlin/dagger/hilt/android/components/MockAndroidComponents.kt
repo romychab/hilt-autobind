@@ -1,0 +1,9 @@
+package dagger.hilt.android.components
+
+annotation class ActivityComponent
+annotation class ActivityRetainedComponent
+annotation class ViewModelComponent
+annotation class FragmentComponent
+annotation class ViewComponent
+annotation class ViewWithFragmentComponent
+annotation class ServiceComponent

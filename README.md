@@ -20,8 +20,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.1.1")
-    ksp("com.uandcode:hilt-autobind-compiler:0.1.1")
+    implementation("com.uandcode:hilt-autobind:0.2.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.2.0")
 }
 ```
 
@@ -61,13 +61,14 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 
 ## Features
 
-| Feature                                              | Annotation / parameter      | Description                                                                         |
-|------------------------------------------------------|-----------------------------|-------------------------------------------------------------------------------------|
-| [Basic binding](docs/basic-usage.md)                 | `@AutoBinds`                | Generates `@Binds` modules for interface implementations                            |
-| [Scopes & components](docs/scopes-and-components.md) | `installIn`                 | Auto-detects or explicitly sets the Hilt component                                  |
-| [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)` | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
-| [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)` | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
-| [Multibinding](docs/multibinding.md)                 | `@AutoBindsIntoSet`         | Contributes to a Dagger `Set` multibinding                                          |
+| Feature                                              | Annotation / parameter          | Description                                                                         |
+|------------------------------------------------------|---------------------------------|-------------------------------------------------------------------------------------|
+| [Basic binding](docs/basic-usage.md)                 | `@AutoBinds`                    | Generates `@Binds` modules for interface implementations                            |
+| [Scopes & components](docs/scopes-and-components.md) | `installIn`                     | Auto-detects or explicitly sets the Hilt component                                  |
+| [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)`     | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
+| [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
+| [Multibinding](docs/multibinding.md)                 | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
+| [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
 
 ## Requirements
 

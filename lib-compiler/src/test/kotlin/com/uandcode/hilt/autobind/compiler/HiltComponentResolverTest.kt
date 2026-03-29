@@ -100,6 +100,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -136,6 +137,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -172,6 +174,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -208,6 +211,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -244,6 +248,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -280,6 +285,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -351,6 +357,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -386,6 +393,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -421,6 +429,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -456,6 +465,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -491,6 +501,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -526,6 +537,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""
@@ -561,6 +573,7 @@ class HiltComponentResolverTest {
         """.trimIndent())
 
         val result = compile(source)
+        result.assertOk()
 
         val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
         generated.assertContent("""

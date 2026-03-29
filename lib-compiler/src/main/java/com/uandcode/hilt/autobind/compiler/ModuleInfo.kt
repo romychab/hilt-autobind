@@ -11,6 +11,8 @@ internal class ModuleInfo(
     val annotatedClass: KSClassDeclaration,
     val hiltComponentClassName: ClassName,
     val scopeClassName: ClassName,
+    val annotationName: String,
+    val annotationSource: KSClassDeclaration,
     moduleNameSuffix: String = "Module",
 ) {
     val originClassName: ClassName = annotatedClass.toClassName()

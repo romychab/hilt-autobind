@@ -1,4 +1,4 @@
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.generators
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
