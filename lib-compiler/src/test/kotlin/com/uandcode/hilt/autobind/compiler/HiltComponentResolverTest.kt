@@ -650,8 +650,11 @@ class HiltComponentResolverTest {
 
         val result = compile(source)
         result.assertCompilationError()
-        assertTrue(result.messages.contains("@Singleton"))
-        assertTrue(result.messages.contains("Activity"))
+        assertTrue(
+            result.messages.contains("class has conflicting scopes: " +
+                    "[dagger.hilt.android.scopes.ActivityScoped, javax.inject.Singleton]. " +
+                    "Make sure you align installIn=... param with Scope annotatio")
+        )
     }
 
     @Test

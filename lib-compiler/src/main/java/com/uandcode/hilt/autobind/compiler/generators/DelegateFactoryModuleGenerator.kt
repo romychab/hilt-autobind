@@ -3,18 +3,23 @@
 package com.uandcode.hilt.autobind.compiler.generators
 
 import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
@@ -51,7 +56,7 @@ internal class DelegateFactoryModuleGenerator(
             }
         val isAutoScoped = provideDelegateMethod
             ?.isAnnotationPresent(AutoScoped::class) == true ||
-                moduleInfo.hasScopeAnnotation
+                moduleInfo.isScopedBindingRequired
 
         val delegateMethods = annotatedClass.getDeclaredFunctions()
             .filter { !it.isConstructor() }
@@ -81,6 +86,7 @@ internal class DelegateFactoryModuleGenerator(
                 .apply {
                     if (isAutoScoped) addAnnotation(scopeClassName)
                 }
+                .applyQualifier(moduleInfo)
                 .addParameter("factory", factoryClassName)
                 .addCode("return factory.provideDelegate()")
                 .returns(originClassName)
@@ -90,21 +96,32 @@ internal class DelegateFactoryModuleGenerator(
         // @Provides for each sub-delegate method of the annotated type
         for (delegateMethod in delegateMethods) {
             val returnType = delegateMethod.returnType?.resolve() ?: continue
-            val returnTypeName = returnType.toTypeName()
-            val methodName = delegateMethod.simpleName.asString()
-            val provideMethodName = "provide${methodName.replaceFirstChar { it.uppercase() }}"
-
-            builder.addFunction(
-                FunSpec.builder(provideMethodName)
-                    .addAnnotation(Provides::class)
-                    .addParameter("delegate", originClassName)
-                    .addCode("return delegate.%N()", methodName)
-                    .returns(returnTypeName)
-                    .build()
-            )
+            val function = buildDelegateFunction(delegateMethod, returnType, originClassName, qualifier)
+            builder.addFunction(function)
         }
 
         return builder.build()
+    }
+
+    private fun buildDelegateFunction(
+        delegateMethod: KSFunctionDeclaration,
+        returnType: KSType,
+        originClassName: ClassName,
+        qualifier: KSAnnotation?,
+    ): FunSpec {
+        val returnTypeName = returnType.toTypeName()
+        val methodName = delegateMethod.simpleName.asString()
+        val provideMethodName = "provide${methodName.replaceFirstChar { it.uppercase() }}"
+        return FunSpec.builder(provideMethodName)
+            .addAnnotation(Provides::class)
+            .addParameter(ParameterSpec.builder("delegate", originClassName)
+                .apply {
+                    if (qualifier != null) addAnnotation(qualifier.toAnnotationSpec())
+                }
+                .build())
+            .addCode("return delegate.%N()", methodName)
+            .returns(returnTypeName)
+            .build()
     }
 
     private fun ModuleInfo.validateFactory(

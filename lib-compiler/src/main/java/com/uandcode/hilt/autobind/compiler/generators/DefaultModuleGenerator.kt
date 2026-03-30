@@ -67,10 +67,11 @@ internal class DefaultModuleGenerator(
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .apply {
-                if (moduleInfo.hasScopeAnnotation && moduleInfo.isScopeOnInject) {
+                if (moduleInfo.isScopedBindingRequired) {
                     addAnnotation(moduleInfo.scopeClassName)
                 }
             }
+            .applyQualifier(moduleInfo)
             .addModifiers(KModifier.ABSTRACT)
             .returns(it.supertypeTypeName)
             .build()

@@ -72,10 +72,11 @@ internal class IntoSetModuleGenerator(
             .addAnnotation(Binds::class)
             .addAnnotation(IntoSet::class)
             .apply {
-                if (moduleInfo.hasScopeAnnotation) {
+                if (moduleInfo.isScopedBindingRequired) {
                     addAnnotation(moduleInfo.scopeClassName)
                 }
             }
+            .applyQualifier(moduleInfo)
             .addModifiers(KModifier.ABSTRACT)
             .returns(it.supertypeTypeName)
             .build()

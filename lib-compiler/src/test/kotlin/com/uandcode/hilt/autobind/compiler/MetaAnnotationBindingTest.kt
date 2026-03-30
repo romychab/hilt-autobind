@@ -309,9 +309,11 @@ class MetaAnnotationBindingTest {
         val result = compile(source)
         result.assertCompilationError()
 
-        assertTrue(result.messages.contains("class 'MainPresenter' is scoped with " +
-                "@ActivityScoped but installIn targets Fragment (expected scope " +
-                "is @FragmentScoped)"))
+        assertTrue(result.messages.contains(
+            "class has conflicting scopes: " +
+                    "[dagger.hilt.android.scopes.FragmentScoped, dagger.hilt.android.scopes.ActivityScoped]. " +
+                    "Make sure you align installIn=... param with Scope annotation"
+        ))
     }
 
     @Test
@@ -368,8 +370,6 @@ class MetaAnnotationBindingTest {
             import javax.inject.Singleton
             import kotlin.reflect.KClass
 
-            interface BooksApi
-
             class RetrofitFactory @Inject constructor() : ClassBindingFactory {
                 override fun <T : Any> create(kClass: KClass<T>): T {
                     throw UnsupportedOperationException()
@@ -382,13 +382,13 @@ class MetaAnnotationBindingTest {
             annotation class BindRetrofit
 
             @BindRetrofit
-            interface BooksApiImpl : BooksApi
+            interface BooksApi
         """.trimIndent())
 
         val result = compile(source)
         result.assertOk()
 
-        val generated = result.assertHasGeneratedFile("BooksApiImplModule.kt")
+        val generated = result.assertHasGeneratedFile("BooksApiModule.kt")
         generated.assertContent("""
             package test
 
@@ -400,10 +400,10 @@ class MetaAnnotationBindingTest {
 
             @Module
             @InstallIn(SingletonComponent::class)
-            internal object BooksApiImplModule {
+            internal object BooksApiModule {
               @Provides
               @Singleton
-              public fun provideBooksApiImpl(factory: RetrofitFactory): BooksApiImpl = factory.create(BooksApiImpl::class)
+              public fun provideBooksApi(factory: RetrofitFactory): BooksApi = factory.create(BooksApi::class)
             }
         """.trimIndent())
     }
@@ -487,7 +487,11 @@ class MetaAnnotationBindingTest {
 
         val result = compile(source)
         result.assertCompilationError()
-        assertTrue(result.messages.contains("different scopes"))
+        assertTrue(result.messages.contains(
+            "class has conflicting scopes: " +
+                    "[dagger.hilt.android.scopes.ActivityScoped, javax.inject.Singleton]. " +
+                    "Make sure you align installIn=... param with Scope annotation"
+        ))
     }
 
     @Test

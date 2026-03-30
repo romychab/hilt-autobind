@@ -5,6 +5,7 @@ package com.uandcode.hilt.autobind.compiler.generators
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
@@ -21,7 +22,9 @@ import javax.inject.Inject
  * Generates an object-based Hilt module with a `@Provides` function
  * that delegates instance creation to a [ClassBindingFactory].
  */
-internal class ClassFactoryModuleGenerator {
+internal class ClassFactoryModuleGenerator(
+    logger: KSPLogger,
+) : AbstractModuleGenerator(logger) {
 
     fun generate(
         moduleInfo: ModuleInfo,
@@ -43,7 +46,7 @@ internal class ClassFactoryModuleGenerator {
             .firstOrNull { it.simpleName.asString() == CREATE_METHOD &&
                     it.parameters.singleOrNull()?.isKClassType() == true }
         val isAutoScoped = createMethod?.isAnnotationPresent(AutoScoped::class) == true
-                || moduleInfo.hasScopeAnnotation
+                || moduleInfo.isScopedBindingRequired
 
         return TypeSpec.objectBuilder(moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
@@ -51,8 +54,11 @@ internal class ClassFactoryModuleGenerator {
                 FunSpec.builder("provide$originSimpleName")
                     .addAnnotation(Provides::class)
                     .apply {
-                        if (isAutoScoped) addAnnotation(scopeClassName)
+                        if (isAutoScoped) {
+                            addAnnotation(scopeClassName)
+                        }
                     }
+                    .applyQualifier(moduleInfo)
                     .addParameter("factory", factoryDeclaration.toClassName())
                     .addCode("return factory.create(%T::class)", originClassName)
                     .returns(originClassName)

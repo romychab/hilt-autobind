@@ -5,9 +5,10 @@
 - [Overview](#overview)
 - [Defining an alias](#defining-an-alias)
 - [Forwarding installIn and scope](#forwarding-installin-and-scope)
+- [Forwarding a qualifier](#forwarding-a-qualifier)
 - [Forwarding a factory](#forwarding-a-factory)
 - [Multiple classes with one alias](#multiple-classes-with-one-alias)
-- [Using @AutoBindsIntoSet as an alias](#using-autobindsintosetas-an-alias)
+- [Multibinding in aliases](#multibinding-in-aliases)
 - [Requirements for alias annotations](#requirements-for-alias-annotations)
 
 ## Overview
@@ -144,6 +145,26 @@ scope annotation is present on either the alias or the annotated class, the
 processor defaults to `SingletonComponent`. See
 [Scopes and Components](scopes-and-components.md) for the full mapping.
 
+## Forwarding a Qualifier
+
+A qualifier annotation (annotated with `@Qualifier`) can be placed on the alias so
+every class using that alias gets the qualifier automatically:
+
+```kotlin
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+annotation class RetrofitApi
+
+@Target(AnnotationTarget.CLASS)
+@AutoBinds
+@RetrofitApi
+annotation class BindRetrofit
+```
+
+As a result, every class annotated with `@BindRetrofit` generates a binding
+with `@RetrofitApi` qualifier on the `@Binds` function. See [Qualifiers](qualifiers.md#qualifiers-on-annotation-aliases)
+for conflict rules when both the alias and the annotated class carry qualifiers.
+
 ## Forwarding a Factory
 
 The `factory` parameter is forwarded to every class annotated with the alias,
@@ -220,7 +241,7 @@ class RepoBImpl @Inject constructor() : RepoB
 This generates `RepoAImplModule.kt` and `RepoBImplModule.kt` as separate files,
 just as if each class had `@AutoBinds` applied directly.
 
-## Using @AutoBindsIntoSet as an Alias
+## Multibinding in aliases
 
 `@AutoBindsIntoSet` supports the same alias mechanism as `@AutoBinds`. Annotate
 an annotation class with `@AutoBindsIntoSet` and every class annotated with that

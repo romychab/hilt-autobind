@@ -5,10 +5,9 @@ package com.uandcode.hilt.autobind.compiler.resolver
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.compiler.Const.AUTOBINDS_NAME
-import com.uandcode.hilt.autobind.compiler.HiltComponentResolver
+import com.uandcode.hilt.autobind.compiler.AutoBindingParamsResolver
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.compiler.ModuleType
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
@@ -27,7 +26,7 @@ internal class AutoBindsResolver(
 
     override val annotationClass: KClass<out Annotation> = AutoBinds::class
 
-    private val componentResolver = HiltComponentResolver()
+    private val componentResolver = AutoBindingParamsResolver()
     private val bindingTypesCollector = BindingTypesCollector()
 
     override fun resolve(
@@ -45,8 +44,8 @@ internal class AutoBindsResolver(
             )
         }
 
-        val resolved = componentResolver.resolve(
-            declaredComponent = annotation.installIn,
+        val resolvedComponent = componentResolver.resolve(
+            installInComponent = annotation.installIn,
             annotatedClass = annotatedClass,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
@@ -61,12 +60,9 @@ internal class AutoBindsResolver(
 
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
-            hiltComponentClassName = resolved.hiltComponentClassName,
-            scopeClassName = resolved.scopeClassName,
-            hasScopeAnnotation = resolved.hasScopeAnnotation,
+            autoBindingParams = resolvedComponent,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
-            isScopeOnInject = resolved.isScopeOnInject,
             bindTargets = bindTargets,
         )
         val moduleType = getModuleType(annotationSource)

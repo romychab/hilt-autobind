@@ -7,7 +7,7 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
 import com.uandcode.hilt.autobind.compiler.Const.AUTOBINDS_INTO_SET_NAME
-import com.uandcode.hilt.autobind.compiler.HiltComponentResolver
+import com.uandcode.hilt.autobind.compiler.AutoBindingParamsResolver
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.compiler.ModuleType
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
@@ -22,7 +22,7 @@ internal class AutoBindsIntoSetResolver(
 
     override val annotationClass: KClass<out Annotation> = AutoBindsIntoSet::class
 
-    private val componentResolver = HiltComponentResolver()
+    private val componentResolver = AutoBindingParamsResolver()
     private val bindingTypesCollector = BindingTypesCollector()
 
     override fun resolve(
@@ -37,8 +37,8 @@ internal class AutoBindsIntoSetResolver(
             annotatedClass
         )
 
-        val resolved = componentResolver.resolve(
-            declaredComponent = annotation.installIn,
+        val resolvedComponent = componentResolver.resolve(
+            installInComponent = annotation.installIn,
             annotatedClass = annotatedClass,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
@@ -53,12 +53,9 @@ internal class AutoBindsIntoSetResolver(
 
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
-            hiltComponentClassName = resolved.hiltComponentClassName,
-            scopeClassName = resolved.scopeClassName,
-            isScopeOnInject = resolved.isScopeOnInject,
+            autoBindingParams = resolvedComponent,
             annotationSource = annotationSource,
             moduleNameSuffix = "__IntoSetModule",
-            hasScopeAnnotation = resolved.hasScopeAnnotation,
             annotationName = originAnnotationName,
             bindTargets = bindTargets,
         )
