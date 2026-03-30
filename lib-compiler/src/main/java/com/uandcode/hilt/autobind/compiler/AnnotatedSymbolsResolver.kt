@@ -203,13 +203,16 @@ internal class AnnotatedSymbolsResolver(
         val resolved = componentResolver.resolve(
             declaredComponent = annotation.installIn,
             annotatedClass = annotatedClass,
-            annotationName = AUTOBINDS_NAME,
+            annotationSource = annotationSource,
+            annotationName = originAnnotationName,
         ) ?: return
 
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
             hiltComponentClassName = resolved.hiltComponentClassName,
             scopeClassName = resolved.scopeClassName,
+            hasScopeAnnotation = resolved.hasScopeAnnotation,
+            isObjectModuleRequired = resolved.isObjectModuleRequired,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
         )
@@ -236,6 +239,7 @@ internal class AnnotatedSymbolsResolver(
         val resolved = componentResolver.resolve(
             declaredComponent = annotation.installIn,
             annotatedClass = annotatedClass,
+            annotationSource = annotatedClass,
             annotationName = AUTOBINDS_INTO_SET_NAME,
         ) ?: return
 
@@ -245,6 +249,8 @@ internal class AnnotatedSymbolsResolver(
             scopeClassName = resolved.scopeClassName,
             annotationSource = annotatedClass,
             moduleNameSuffix = "__IntoSetModule",
+            hasScopeAnnotation = resolved.hasScopeAnnotation,
+            isObjectModuleRequired = resolved.isObjectModuleRequired,
             annotationName = requireNotNull(AutoBindsIntoSet::class.simpleName)
         )
         onGenerateHiltModule.invoke(ModuleType.IntoSet, moduleInfo)

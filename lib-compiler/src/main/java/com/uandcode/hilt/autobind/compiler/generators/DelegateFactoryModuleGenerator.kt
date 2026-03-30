@@ -49,7 +49,8 @@ internal class DelegateFactoryModuleGenerator(
                 it.simpleName.asString() == PROVIDE_DELEGATE_METHOD && it.modifiers.contains(Modifier.OVERRIDE)
             }
         val isAutoScoped = provideDelegateMethod
-            ?.isAnnotationPresent(AutoScoped::class) == true
+            ?.isAnnotationPresent(AutoScoped::class) == true ||
+                moduleInfo.hasScopeAnnotation
 
         val delegateMethods = annotatedClass.getDeclaredFunctions()
             .filter { !it.isConstructor() }

@@ -2,6 +2,7 @@ package com.uandcode.hilt.autobind.compiler
 
 import com.tschuchort.compiletesting.SourceFile
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertCompilationError
+import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertContent
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertHasGeneratedFile
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertOk
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.compile
@@ -39,13 +40,27 @@ class DelegateFactoryBindingTest {
         result.assertOk()
 
         val generated = result.assertHasGeneratedFile("MyDbModule.kt")
-        assertTrue(generated.contains("fun provideMyDb"))
-        assertTrue(generated.contains("factory.provideDelegate()"))
-        assertTrue(generated.contains("fun provideNoteDao"))
-        assertTrue(generated.contains("delegate.noteDao()"))
-        assertTrue(generated.contains("fun provideOrderDao"))
-        assertTrue(generated.contains("delegate.orderDao()"))
-        assertTrue(generated.contains("internal object MyDbModule"))
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal object MyDbModule {
+              @Provides
+              public fun provideMyDb(factory: MyDbFactory): MyDb = factory.provideDelegate()
+
+              @Provides
+              public fun provideNoteDao(`delegate`: MyDb): NoteDao = delegate.noteDao()
+
+              @Provides
+              public fun provideOrderDao(`delegate`: MyDb): OrderDao = delegate.orderDao()
+            }
+        """.trimIndent())
     }
 
     @Test
@@ -75,8 +90,24 @@ class DelegateFactoryBindingTest {
         result.assertOk()
 
         val generated = result.assertHasGeneratedFile("MyDbModule.kt")
-        assertTrue(generated.contains("fun provideNoteDao"))
-        assertTrue(generated.contains("delegate.noteDao()"))
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal object MyDbModule {
+              @Provides
+              public fun provideMyDb(factory: MyDbFactory): MyDb = factory.provideDelegate()
+
+              @Provides
+              public fun provideNoteDao(`delegate`: MyDb): NoteDao = delegate.noteDao()
+            }
+        """.trimIndent())
     }
 
     @Test
@@ -108,11 +139,26 @@ class DelegateFactoryBindingTest {
         result.assertOk()
 
         val generated = result.assertHasGeneratedFile("MyDbModule.kt")
-        // The main provide method should have @Singleton
-        assertTrue(generated.contains("@Singleton"))
-        // Count occurrences: @Singleton should appear only once (for provideMyDb, not provideNoteDao)
-        val singletonCount = Regex("@Singleton").findAll(generated).count()
-        assertTrue(singletonCount == 1, "Expected @Singleton once but found $singletonCount times")
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import javax.inject.Singleton
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal object MyDbModule {
+              @Provides
+              @Singleton
+              public fun provideMyDb(factory: MyDbFactory): MyDb = factory.provideDelegate()
+
+              @Provides
+              public fun provideNoteDao(`delegate`: MyDb): NoteDao = delegate.noteDao()
+            }
+        """.trimIndent())
     }
 
     @Test
