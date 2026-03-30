@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.4.1")
-    ksp("com.uandcode:hilt-autobind-compiler:0.4.1")
+    implementation("com.uandcode:hilt-autobind:0.5.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.5.0")
 }
 ```
 
@@ -69,8 +69,9 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)`     | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
 | [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
 | [Multibinding](docs/multibinding.md)                 | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
+| [Qualifiers](docs/qualifiers.md)                     | `@Named` / custom `@Qualifier`  | Distinguishes multiple bindings of the same type with JSR-330 qualifier annotations |
 | [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
-| [Multi-Module Projects](docs/multi-module.md)        | Aliases                         | Per-module setup in multi-module projects                                           |
+| [Multi-Module Projects](docs/multi-module.md)        | -                               | Per-module setup in multi-module projects                                           |
 
 ## Requirements
 

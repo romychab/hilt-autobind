@@ -3,7 +3,9 @@ package com.uandcode.hilt.autobind.compiler.generators
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
@@ -50,6 +52,14 @@ internal abstract class AbstractModuleGenerator(
 
     protected fun ModuleInfo.logNoImplementedSuperTypes(annotatedClass: KSClassDeclaration) {
         commonKspFail("must implement at least one interface or extend a super-class", annotatedClass)
+    }
+
+    protected fun FunSpec.Builder.applyQualifier(
+        moduleInfo: ModuleInfo,
+    ) = apply {
+        if (moduleInfo.qualifier != null) {
+            addAnnotation(moduleInfo.qualifier.toAnnotationSpec())
+        }
     }
 
     class TargetSuperType(

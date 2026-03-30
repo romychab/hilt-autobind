@@ -241,7 +241,6 @@ class MetaAnnotationIntoSetBindingTest {
             import dagger.Module
             import dagger.hilt.InstallIn
             import dagger.hilt.android.components.ActivityComponent
-            import dagger.hilt.android.scopes.ActivityScoped
             import dagger.multibindings.IntoSet
 
             @Module
@@ -249,7 +248,6 @@ class MetaAnnotationIntoSetBindingTest {
             internal interface MainHandler__IntoSetModule {
               @Binds
               @IntoSet
-              @ActivityScoped
               public fun bindToHandler(`impl`: MainHandler): Handler
             }
         """.trimIndent())

@@ -7,6 +7,7 @@
 - [Generic interfaces](#generic-interfaces)
 - [Parent class binding](#parent-class-binding)
 - [Selecting specific binding targets](#selecting-specific-binding-targets)
+- [Qualifier annotations](#qualifier-annotations)
 - [How it works](#how-it-works)
 - [Requirements for annotated classes](#requirements-for-annotated-classes)
 
@@ -167,6 +168,26 @@ processor emits a compile-time error if a listed type is not a supertype
 at all.
 
 When `bindTo` is empty (the default), all direct supertypes are used.
+
+## Qualifier Annotations
+
+A JSR-330 qualifier annotation placed on the annotated class is forwarded to the
+generated `@Binds` function, allowing Hilt to distinguish multiple bindings of the
+same type:
+
+```kotlin
+@Named("prod")
+@AutoBinds
+class ProdApiService @Inject constructor() : ApiService
+
+@Named("mock")
+@AutoBinds
+class MockApiService @Inject constructor() : ApiService
+```
+
+Custom `@Qualifier` annotations are supported in the same way. See
+[Qualifiers](qualifiers.md) for the full guide, including usage with
+`@AutoBindsIntoSet`, factory bindings, and annotation aliases.
 
 ## How It Works
 

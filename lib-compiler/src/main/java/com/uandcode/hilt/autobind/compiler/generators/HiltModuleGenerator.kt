@@ -16,7 +16,7 @@ internal class HiltModuleGenerator(
 ) {
 
     private val defaultModuleGenerator = DefaultModuleGenerator(logger)
-    private val classFactoryModuleGenerator = ClassFactoryModuleGenerator()
+    private val classFactoryModuleGenerator = ClassFactoryModuleGenerator(logger)
     private val delegateFactoryModuleGenerator = DelegateFactoryModuleGenerator(logger)
     private val intoSetModuleGenerator = IntoSetModuleGenerator(logger)
 
