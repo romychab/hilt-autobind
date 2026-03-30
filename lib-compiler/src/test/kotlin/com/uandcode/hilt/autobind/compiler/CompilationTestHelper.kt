@@ -47,7 +47,7 @@ object CompilationTestHelper {
     }
 
     fun String.assertContent(expected: String) {
-        assertEquals(compacted(), expected.compacted())
+        assertEquals(expected.compacted(), compacted())
     }
 
     private fun String.compacted(): String {

@@ -25,9 +25,9 @@ class AutoBindingSymbolProcessor(
     private val codeGenerator: CodeGenerator,
 ) : SymbolProcessor {
 
-    private val componentResolver = HiltComponentResolver(logger)
+    private val componentResolver = HiltComponentResolver()
     private val defaultModuleGenerator = DefaultModuleGenerator(logger)
-    private val classFactoryModuleGenerator = ClassFactoryModuleGenerator(logger)
+    private val classFactoryModuleGenerator = ClassFactoryModuleGenerator()
     private val delegateFactoryModuleGenerator = DelegateFactoryModuleGenerator(logger)
     private val intoSetModuleGenerator = IntoSetModuleGenerator(logger)
     private val metadataGenerator = MetadataGenerator(codeGenerator)
@@ -37,11 +37,16 @@ class AutoBindingSymbolProcessor(
     )
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        return annotatedSymbolsResolver.processAnnotatedSymbols(
-            resolver = resolver,
-            onGenerateHiltModule = ::buildHiltModule,
-            onGenerateMetaAutoBinding = metadataGenerator::buildMetadataCarrier,
-        )
+        return try {
+            annotatedSymbolsResolver.processAnnotatedSymbols(
+                resolver = resolver,
+                onGenerateHiltModule = ::buildHiltModule,
+                onGenerateMetaAutoBinding = metadataGenerator::buildMetadataCarrier,
+            )
+        } catch (e: AutoBindException) {
+            logger.error(e.message ?: "Error!", e.symbol)
+            emptyList()
+        }
     }
 
     private fun buildHiltModule(type: ModuleType, moduleInfo: ModuleInfo) {
@@ -57,37 +62,32 @@ class AutoBindingSymbolProcessor(
                 factoryDeclaration = type.factoryDeclaration,
             )
         }
-
-        if (typeSpec != null) {
-            writeModule(
-                hiltModuleTypeSpec = typeSpec,
-                moduleInfo = moduleInfo,
-            )
-        }
+        writeModule(
+            hiltModuleTypeSpec = typeSpec,
+            moduleInfo = moduleInfo,
+        )
     }
 
     private fun writeModule(
-        hiltModuleTypeSpec: TypeSpec?,
+        hiltModuleTypeSpec: TypeSpec,
         moduleInfo: ModuleInfo,
         annotationSource: KSClassDeclaration = moduleInfo.annotationSource,
     ) {
-        if (hiltModuleTypeSpec != null) {
-            val fileSpec = FileSpec.builder(moduleInfo.moduleClassName)
-                .addType(hiltModuleTypeSpec)
-                .build()
-            val sources = listOfNotNull(
-                moduleInfo.annotatedClass.containingFile,
-                annotationSource.containingFile.takeIf { it != moduleInfo.annotatedClass
-                    .containingFile },
+        val fileSpec = FileSpec.builder(moduleInfo.moduleClassName)
+            .addType(hiltModuleTypeSpec)
+            .build()
+        val sources = listOfNotNull(
+            moduleInfo.annotatedClass.containingFile,
+            annotationSource.containingFile.takeIf { it != moduleInfo.annotatedClass
+                .containingFile },
+        )
+        fileSpec.writeTo(
+            codeGenerator = codeGenerator,
+            dependencies = Dependencies(
+                aggregating = false,
+                *sources.toTypedArray(),
             )
-            fileSpec.writeTo(
-                codeGenerator = codeGenerator,
-                dependencies = Dependencies(
-                    aggregating = false,
-                    *sources.toTypedArray(),
-                )
-            )
-        }
+        )
     }
 
 }

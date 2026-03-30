@@ -17,3 +17,36 @@ internal fun KSClassDeclaration.getTargetSuperTypes(): List<KSType> {
         }
         .toList()
 }
+
+/**
+ * Returns true if this annotation declaration has [@Target] that includes
+ * [AnnotationTarget.CLASS].
+ */
+internal fun KSClassDeclaration.targetsClass(): Boolean {
+    val targetAnnotation = annotations.firstOrNull {
+        it.shortName.asString() == "Target"
+    } ?: return false
+
+    @Suppress("UNCHECKED_CAST")
+    val targetList = targetAnnotation.arguments
+        .firstOrNull()
+        ?.value as? List<*>
+        ?: return false
+
+    return (targetList.singleOrNull() as? KSClassDeclaration)
+        ?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.CLASS"
+}
+
+internal fun findFactoryKType(
+    annotationSource: KSClassDeclaration,
+    annotationName: String,
+): KSType? {
+    return annotationSource
+        .annotations
+        .firstOrNull { it.shortName.asString() == annotationName }
+        ?.arguments
+        ?.firstOrNull { it.name?.asString() == FACTORY_ARG_NAME }
+        ?.value as? KSType
+}
+
+private const val FACTORY_ARG_NAME = "factory"

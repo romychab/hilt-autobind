@@ -11,7 +11,6 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.validate
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
 import com.uandcode.hilt.autobind.compiler.HiltComponentResolver
@@ -19,6 +18,9 @@ import com.uandcode.hilt.autobind.compiler.METADATA_PACKAGE
 import com.uandcode.hilt.autobind.compiler.MetadataInfo
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.compiler.ModuleType
+import com.uandcode.hilt.autobind.compiler.generators.findFactoryKType
+import com.uandcode.hilt.autobind.compiler.generators.targetsClass
+import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import com.uandcode.hilt.autobind.factories.NoOpBindingFactory
@@ -29,7 +31,7 @@ internal class AnnotatedSymbolsResolver(
     private val componentResolver: HiltComponentResolver,
 ) {
 
-    private val bindTypesResolver: BindTypesResolver = BindTypesResolver(logger)
+    private val bindTypesResolver: BindTypesResolver = BindTypesResolver()
 
     fun processAnnotatedSymbols(
         resolver: Resolver,
@@ -38,7 +40,7 @@ internal class AnnotatedSymbolsResolver(
     ): List<KSAnnotated> {
         val deferred = mutableListOf<KSAnnotated>()
         deferred += processAutoBindsSymbols(resolver, onGenerateHiltModule, onGenerateMetaAutoBinding)
-        deferred += processAutoBindsIntoSet(resolver, onGenerateHiltModule)
+        deferred += processAutoBindsIntoSetSymbols(resolver, onGenerateHiltModule, onGenerateMetaAutoBinding)
         deferred += processMultiModuleMetaAnnotations(resolver, onGenerateHiltModule)
         return deferred
     }
@@ -53,31 +55,22 @@ internal class AnnotatedSymbolsResolver(
         resolver: Resolver,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
         onGenerateMetaAutoBinding: (MetadataInfo) -> Unit,
-    ): List<KSAnnotated> {
-        val symbols = resolver
-            .getSymbolsWithAnnotation(requireNotNull(AutoBinds::class.qualifiedName))
-            .filterIsInstance<KSClassDeclaration>()
-            .toList()
-
-        val deferred = mutableListOf<KSAnnotated>()
-        for (symbol in symbols) {
-            if (!symbol.validate()) {
-                deferred.add(symbol)
-                continue
-            }
+    ): List<KSAnnotated> = resolver
+        .getSymbolsWithAnnotation(requireNotNull(AutoBinds::class.qualifiedName))
+        .filterIsInstance<KSClassDeclaration>()
+        .collectSymbols { symbol ->
             if (symbol.classKind == ClassKind.ANNOTATION_CLASS) {
                 onGenerateMetaAutoBinding(MetadataInfo(symbol))
-                deferred += processMetaAutoBinds(resolver, symbol, onGenerateHiltModule)
+                processMetaAutoBinds(resolver, symbol, onGenerateHiltModule)
             } else {
                 processAutoBinds(
                     annotatedClass = symbol,
                     originAnnotationName = requireNotNull(AutoBinds::class.simpleName),
                     onGenerateHiltModule = onGenerateHiltModule,
                 )
+                emptyList()
             }
         }
-        return deferred
-    }
 
     private fun processMultiModuleMetaAnnotations(
         resolver: Resolver,
@@ -99,21 +92,27 @@ internal class AnnotatedSymbolsResolver(
                 val symbols = resolver
                     .getSymbolsWithAnnotation(annotationQualifiedName)
                     .filterIsInstance<KSClassDeclaration>()
-                    .toList()
-                val deferred = mutableListOf<KSAnnotated>()
-                for (symbol in symbols) {
-                    if (!symbol.validate()) {
-                        deferred.add(symbol)
-                        continue
+                    .failOnConflictingAnnotations()
+                val hasAutoBindsIntoSet = annotationClassName.annotations
+                    .any { it.shortName.asString() == AUTOBINDS_INTO_SET_NAME }
+                symbols.collectSymbols { symbol ->
+                    if (hasAutoBindsIntoSet) {
+                        processAutoBindsIntoSet(
+                            annotatedClass = symbol,
+                            annotationSource = annotationClassName,
+                            originAnnotationName = annotationClassName.simpleName.asString(),
+                            onGenerateHiltModule = onGenerateHiltModule,
+                        )
+                    } else {
+                        processAutoBinds(
+                            annotatedClass = symbol,
+                            annotationSource = annotationClassName,
+                            originAnnotationName = annotationClassName.simpleName.asString(),
+                            onGenerateHiltModule = onGenerateHiltModule,
+                        )
                     }
-                    processAutoBinds(
-                        annotatedClass = symbol,
-                        annotationSource = annotationClassName,
-                        originAnnotationName = annotationClassName.simpleName.asString(),
-                        onGenerateHiltModule = onGenerateHiltModule,
-                    )
+                    emptyList()
                 }
-                deferred
             }
             .toList()
     }
@@ -131,55 +130,92 @@ internal class AnnotatedSymbolsResolver(
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
     ): List<KSAnnotated> {
         if (!metaAnnotation.targetsClass()) {
-            logger.error(
-                "@AutoBinds meta-annotation '@${metaAnnotation.simpleName.asString()}' must declare " +
+            kspFail("@AutoBinds meta-annotation '@${metaAnnotation.simpleName.asString()}' must declare " +
                         "@Target(AnnotationTarget.CLASS) to be applied to classes.",
                 metaAnnotation,
             )
-            return emptyList()
         }
 
         val qualifiedName = metaAnnotation.qualifiedName?.asString() ?: return emptyList()
-        val deferred = mutableListOf<KSAnnotated>()
 
-        val symbols = resolver
+        return resolver
             .getSymbolsWithAnnotation(qualifiedName)
             .filterIsInstance<KSClassDeclaration>()
-            .toList()
-
-        for (symbol in symbols) {
-            if (!symbol.validate()) {
-                deferred.add(symbol)
-                continue
+            .failOnConflictingAnnotations()
+            .collectSymbols { symbol ->
+                processAutoBinds(
+                    annotatedClass = symbol,
+                    annotationSource = metaAnnotation,
+                    originAnnotationName = metaAnnotation.simpleName.asString(),
+                    onGenerateHiltModule = onGenerateHiltModule,
+                )
+                emptyList()
             }
-            processAutoBinds(
-                annotatedClass = symbol,
-                annotationSource = metaAnnotation,
-                originAnnotationName = metaAnnotation.simpleName.asString(),
-                onGenerateHiltModule = onGenerateHiltModule,
-            )
-        }
-        return deferred
     }
 
-    private fun processAutoBindsIntoSet(
+    /**
+     * Finds all symbols annotated with [@AutoBindsIntoSet] and routes them:
+     * - Annotation class declarations → treated as meta-annotation aliases (processed via
+     *   [processMetaAutoBindsIntoSet])
+     * - All other class declarations → processed normally via [processAutoBindsIntoSet]
+     */
+    private fun processAutoBindsIntoSetSymbols(
         resolver: Resolver,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
-    ): List<KSAnnotated> {
-        val symbols = resolver
-            .getSymbolsWithAnnotation(requireNotNull(AutoBindsIntoSet::class.qualifiedName))
-            .filterIsInstance<KSClassDeclaration>()
-            .toList()
-
-        val deferred = mutableListOf<KSAnnotated>()
-        for (symbol in symbols) {
-            if (!symbol.validate()) {
-                deferred.add(symbol)
-                continue
+        onGenerateMetaAutoBinding: (MetadataInfo) -> Unit,
+    ): List<KSAnnotated> = resolver
+        .getSymbolsWithAnnotation(requireNotNull(AutoBindsIntoSet::class.qualifiedName))
+        .filterIsInstance<KSClassDeclaration>()
+        .collectSymbols { symbol ->
+            if (symbol.classKind == ClassKind.ANNOTATION_CLASS) {
+                onGenerateMetaAutoBinding(MetadataInfo(symbol))
+                processMetaAutoBindsIntoSet(resolver, symbol, onGenerateHiltModule)
+            } else {
+                processAutoBindsIntoSet(
+                    annotatedClass = symbol,
+                    annotationSource = symbol,
+                    originAnnotationName = requireNotNull(AutoBindsIntoSet::class.simpleName),
+                    onGenerateHiltModule = onGenerateHiltModule,
+                )
+                emptyList()
             }
-            processAutoBindsIntoSet(symbol, onGenerateHiltModule)
         }
-        return deferred
+
+    /**
+     * Handles a user-defined annotation class that carries [@AutoBindsIntoSet] as a meta-annotation.
+     *
+     * Validates that the annotation targets [AnnotationTarget.CLASS], then finds all classes
+     * annotated with it and processes each one using the [@AutoBindsIntoSet] parameters defined on
+     * the meta-annotation declaration.
+     */
+    private fun processMetaAutoBindsIntoSet(
+        resolver: Resolver,
+        metaAnnotation: KSClassDeclaration,
+        onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
+    ): List<KSAnnotated> {
+        if (!metaAnnotation.targetsClass()) {
+            kspFail(
+                "@AutoBindsIntoSet meta-annotation '@${metaAnnotation.simpleName.asString()}' must declare " +
+                        "@Target(AnnotationTarget.CLASS) to be applied to classes.",
+                metaAnnotation,
+            )
+        }
+
+        val qualifiedName = metaAnnotation.qualifiedName?.asString() ?: return emptyList()
+
+        return resolver
+            .getSymbolsWithAnnotation(qualifiedName)
+            .filterIsInstance<KSClassDeclaration>()
+            .failOnConflictingAnnotations()
+            .collectSymbols { symbol ->
+                processAutoBindsIntoSet(
+                    annotatedClass = symbol,
+                    annotationSource = metaAnnotation,
+                    originAnnotationName = metaAnnotation.simpleName.asString(),
+                    onGenerateHiltModule = onGenerateHiltModule,
+                )
+                emptyList()
+            }
     }
 
     /**
@@ -190,7 +226,6 @@ internal class AnnotatedSymbolsResolver(
      *   Defaults to [annotatedClass] for the direct-annotation case; set to the
      *   meta-annotation declaration when the annotation was applied indirectly.
      */
-    @Suppress("ReturnCount")
     private fun processAutoBinds(
         annotatedClass: KSClassDeclaration,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
@@ -201,11 +236,10 @@ internal class AnnotatedSymbolsResolver(
             .getAnnotationsByType(AutoBinds::class)
             .firstOrNull()
         if (annotation == null) {
-            logger.error(
+            kspFail(
                 "Can't find AutoBinds annotation for class ${annotatedClass.simpleName}",
                 annotatedClass,
             )
-            return
         }
 
         val resolved = componentResolver.resolve(
@@ -213,22 +247,23 @@ internal class AnnotatedSymbolsResolver(
             annotatedClass = annotatedClass,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
-        ) ?: return
+        )
 
-        val bindTargets = bindTypesResolver.findBindToKTypes(annotationSource, AUTOBINDS_NAME)
-        if (bindTargets != null &&
-                !bindTypesResolver.validateBindTargets(annotatedClass, bindTargets, originAnnotationName)) {
-            return
-        }
+        val bindTargets = bindTypesResolver.findBindToKTypes(
+            annotatedClass = annotatedClass,
+            annotationSource = annotationSource,
+            annotationShortName = AUTOBINDS_NAME,
+            originAnnotationName = originAnnotationName,
+        )
 
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
             hiltComponentClassName = resolved.hiltComponentClassName,
             scopeClassName = resolved.scopeClassName,
             hasScopeAnnotation = resolved.hasScopeAnnotation,
-            isObjectModuleRequired = resolved.isObjectModuleRequired,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
+            isScopeOnInject = resolved.isScopeOnInject,
             bindTargets = bindTargets,
         )
         val moduleType = getModuleType(annotationSource)
@@ -237,43 +272,50 @@ internal class AnnotatedSymbolsResolver(
         }
     }
 
-    @Suppress("ReturnCount")
+    /**
+     * Processes a class annotated (directly or via a meta-annotation) with [@AutoBindsIntoSet].
+     *
+     * @param annotatedClass The class for which a Hilt module will be generated.
+     * @param annotationSource The declaration from which [@AutoBindsIntoSet] arguments are read.
+     *   Defaults to [annotatedClass] for the direct-annotation case; set to the
+     *   meta-annotation declaration when the annotation was applied indirectly.
+     */
     private fun processAutoBindsIntoSet(
         annotatedClass: KSClassDeclaration,
+        annotationSource: KSClassDeclaration,
+        originAnnotationName: String,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
     ) {
-        val annotation = annotatedClass
+        val annotation = annotationSource
             .getAnnotationsByType(AutoBindsIntoSet::class)
-            .firstOrNull() ?: run {
-                logger.error(
-                    "Can't find AutoBindsIntoSet annotation for class ${annotatedClass.simpleName}",
-                    annotatedClass
-                )
-                return
-            }
+            .firstOrNull() ?: kspFail(
+                "Can't find AutoBindsIntoSet annotation for class ${annotatedClass.simpleName}",
+                annotatedClass
+            )
 
         val resolved = componentResolver.resolve(
             declaredComponent = annotation.installIn,
             annotatedClass = annotatedClass,
-            annotationSource = annotatedClass,
-            annotationName = AUTOBINDS_INTO_SET_NAME,
-        ) ?: return
+            annotationSource = annotationSource,
+            annotationName = originAnnotationName,
+        )
 
-        val bindTargets = bindTypesResolver.findBindToKTypes(annotatedClass, AUTOBINDS_INTO_SET_NAME)
-        if (bindTargets != null &&
-                !bindTypesResolver.validateBindTargets(annotatedClass, bindTargets, AUTOBINDS_INTO_SET_NAME)) {
-            return
-        }
+        val bindTargets = bindTypesResolver.findBindToKTypes(
+            annotatedClass = annotatedClass,
+            annotationSource = annotationSource,
+            annotationShortName = AUTOBINDS_INTO_SET_NAME,
+            originAnnotationName = originAnnotationName,
+        )
 
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
             hiltComponentClassName = resolved.hiltComponentClassName,
             scopeClassName = resolved.scopeClassName,
-            annotationSource = annotatedClass,
+            isScopeOnInject = resolved.isScopeOnInject,
+            annotationSource = annotationSource,
             moduleNameSuffix = "__IntoSetModule",
             hasScopeAnnotation = resolved.hasScopeAnnotation,
-            isObjectModuleRequired = resolved.isObjectModuleRequired,
-            annotationName = requireNotNull(AutoBindsIntoSet::class.simpleName),
+            annotationName = originAnnotationName,
             bindTargets = bindTargets,
         )
         onGenerateHiltModule.invoke(ModuleType.IntoSet, moduleInfo)
@@ -291,7 +333,7 @@ internal class AnnotatedSymbolsResolver(
      *   (either the annotated class itself or a meta-annotation declaration).
      */
     private fun getModuleType(annotationSource: KSClassDeclaration): ModuleType? {
-        return findFactoryKType(annotationSource)
+        return findFactoryKType(annotationSource, AUTOBINDS_NAME)
             ?.let { it.declaration as? KSClassDeclaration }
             ?.takeIf { it.qualifiedName?.asString() != NoOpBindingFactory::class.qualifiedName }
             ?.let { factoryDeclaration ->
@@ -313,38 +355,9 @@ internal class AnnotatedSymbolsResolver(
             } ?: ModuleType.Default
     }
 
-    private fun findFactoryKType(annotationSource: KSClassDeclaration): KSType? {
-        return annotationSource
-            .annotations
-            .firstOrNull { it.shortName.asString() == AUTOBINDS_NAME }
-            ?.arguments
-            ?.firstOrNull { it.name?.asString() == FACTORY_ARG_NAME }
-            ?.value as? KSType
-    }
-
-    /**
-     * Returns true if this annotation declaration has [@Target] that includes
-     * [AnnotationTarget.CLASS].
-     */
-    private fun KSClassDeclaration.targetsClass(): Boolean {
-        val targetAnnotation = annotations.firstOrNull {
-            it.shortName.asString() == "Target"
-        } ?: return false
-
-        @Suppress("UNCHECKED_CAST")
-        val targetList = targetAnnotation.arguments
-            .firstOrNull()
-            ?.value as? List<*>
-            ?: return false
-
-        return (targetList.singleOrNull() as? KSClassDeclaration)
-            ?.qualifiedName?.asString() == "kotlin.annotation.AnnotationTarget.CLASS"
-    }
-
     private companion object {
         const val AUTOBINDS_NAME = "AutoBinds"
         const val AUTOBINDS_INTO_SET_NAME = "AutoBindsIntoSet"
-        const val FACTORY_ARG_NAME = "factory"
 
         const val META_BINDING_INFO = "MetaAutoBindingInfo"
         const val META_ARG_NAME = "qualifiedMetaAnnotationName"

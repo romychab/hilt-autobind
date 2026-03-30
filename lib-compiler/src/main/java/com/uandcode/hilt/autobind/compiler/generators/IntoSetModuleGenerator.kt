@@ -27,35 +27,30 @@ internal class IntoSetModuleGenerator(
     logger: KSPLogger,
 ) : AbstractModuleGenerator(logger = logger) {
 
-    fun generate(moduleInfo: ModuleInfo): TypeSpec? = with(moduleInfo) {
+    fun generate(moduleInfo: ModuleInfo): TypeSpec = with(moduleInfo) {
 
         if (annotatedClass.classKind != ClassKind.CLASS) {
-            logError("must be a class (not object, interface, etc.)", annotatedClass)
-            return null
+            commonKspFail("must be a class (not object, interface, etc.)", annotatedClass)
         }
 
         if (Modifier.INNER in annotatedClass.modifiers) {
-            logError("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
-            return null
+            commonKspFail("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
         }
 
         val targetSuperTypes = moduleInfo.bindTargets ?: annotatedClass.getTargetSuperTypes()
         if (targetSuperTypes.isEmpty()) {
             logNoImplementedSuperTypes(annotatedClass)
-            return null
         }
 
         if (annotatedClass.isAbstract()) {
-            logError("must be a final non-abstract class", annotatedClass)
-            return null
+            commonKspFail("must be a final non-abstract class", annotatedClass)
         }
 
         val hasInjectAnnotation = annotatedClass
             .primaryConstructor
             ?.isAnnotationPresent(Inject::class)
         if (hasInjectAnnotation != true) {
-            logError("must have a primary constructor with @Inject annotation", annotatedClass)
-            return null
+            commonKspFail("must have a primary constructor with @Inject annotation", annotatedClass)
         }
 
         return TypeSpec
@@ -76,6 +71,11 @@ internal class IntoSetModuleGenerator(
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .addAnnotation(IntoSet::class)
+            .apply {
+                if (moduleInfo.hasScopeAnnotation) {
+                    addAnnotation(moduleInfo.scopeClassName)
+                }
+            }
             .addModifiers(KModifier.ABSTRACT)
             .returns(it.supertypeTypeName)
             .build()

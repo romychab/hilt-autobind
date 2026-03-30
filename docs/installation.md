@@ -40,8 +40,8 @@ Add the runtime library and the KSP compiler to your module's `build.gradle.kts`
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.4.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.4.0")
+    implementation("com.uandcode:hilt-autobind:0.4.1")
+    ksp("com.uandcode:hilt-autobind-compiler:0.4.1")
 }
 ```
 
@@ -51,7 +51,7 @@ If your project uses a Gradle version catalog (`libs.versions.toml`):
 
 ```toml
 [versions]
-hiltAutoBind = "0.4.0"
+hiltAutoBind = "0.4.1"
 
 [libraries]
 hilt-autobind = { module = "com.uandcode:hilt-autobind", version.ref = "hiltAutoBind" }

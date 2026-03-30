@@ -676,4 +676,33 @@ class HiltComponentResolverTest {
         assertTrue(result.messages.contains("ActivityScoped"))
         assertTrue(result.messages.contains("Singleton"))
     }
+
+    @Test
+    fun `error when custom scope is used`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import com.uandcode.hilt.autobind.HiltComponent
+            import dagger.hilt.android.scopes.ActivityScoped
+            import javax.inject.Inject
+            import javax.inject.Scope
+
+            @Scope
+            annotation class CustomScope
+
+            interface Repo
+
+            @CustomScope
+            @AutoBinds
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains(
+            "unable to resolve Hilt component for scope 'CustomScope' on class 'RepoImpl'"
+        ))
+    }
+
 }
