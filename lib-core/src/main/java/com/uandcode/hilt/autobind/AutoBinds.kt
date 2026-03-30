@@ -37,10 +37,15 @@ import kotlin.reflect.KClass
  *   Defaults to [HiltComponent.Unspecified], which auto-detects the component from
  *   the scope annotation on the class (falls back to [HiltComponent.Singleton] if unscoped).
  * @param factory optional [BindingFactory] to use for creating instances.
+ * @param bindTo explicit list of supertypes to bind to. When non-empty, only the listed
+ *   types are used as binding targets instead of all direct supertypes. Each type must be
+ *   a transitive supertype of the annotated class; a compile-time error is emitted otherwise.
+ *   Supports grandparent classes and interfaces that are not direct supertypes.
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
 public annotation class AutoBinds(
     val installIn: HiltComponent = HiltComponent.Unspecified,
     val factory: KClass<out BindingFactory> = NoOpBindingFactory::class,
+    val bindTo: Array<KClass<*>> = [],
 )

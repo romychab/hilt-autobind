@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.uandcode.hilt.autobind.compiler
+package com.uandcode.hilt.autobind.compiler.resolver
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
@@ -14,6 +14,11 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.validate
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
+import com.uandcode.hilt.autobind.compiler.HiltComponentResolver
+import com.uandcode.hilt.autobind.compiler.METADATA_PACKAGE
+import com.uandcode.hilt.autobind.compiler.MetadataInfo
+import com.uandcode.hilt.autobind.compiler.ModuleInfo
+import com.uandcode.hilt.autobind.compiler.ModuleType
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import com.uandcode.hilt.autobind.factories.NoOpBindingFactory
@@ -23,6 +28,8 @@ internal class AnnotatedSymbolsResolver(
     private val logger: KSPLogger,
     private val componentResolver: HiltComponentResolver,
 ) {
+
+    private val bindTypesResolver: BindTypesResolver = BindTypesResolver(logger)
 
     fun processAnnotatedSymbols(
         resolver: Resolver,
@@ -183,6 +190,7 @@ internal class AnnotatedSymbolsResolver(
      *   Defaults to [annotatedClass] for the direct-annotation case; set to the
      *   meta-annotation declaration when the annotation was applied indirectly.
      */
+    @Suppress("ReturnCount")
     private fun processAutoBinds(
         annotatedClass: KSClassDeclaration,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
@@ -207,6 +215,12 @@ internal class AnnotatedSymbolsResolver(
             annotationName = originAnnotationName,
         ) ?: return
 
+        val bindTargets = bindTypesResolver.findBindToKTypes(annotationSource, AUTOBINDS_NAME)
+        if (bindTargets != null &&
+                !bindTypesResolver.validateBindTargets(annotatedClass, bindTargets, originAnnotationName)) {
+            return
+        }
+
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
             hiltComponentClassName = resolved.hiltComponentClassName,
@@ -215,6 +229,7 @@ internal class AnnotatedSymbolsResolver(
             isObjectModuleRequired = resolved.isObjectModuleRequired,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,
+            bindTargets = bindTargets,
         )
         val moduleType = getModuleType(annotationSource)
         if (moduleType != null) {
@@ -222,6 +237,7 @@ internal class AnnotatedSymbolsResolver(
         }
     }
 
+    @Suppress("ReturnCount")
     private fun processAutoBindsIntoSet(
         annotatedClass: KSClassDeclaration,
         onGenerateHiltModule: (ModuleType, ModuleInfo) -> Unit,
@@ -243,6 +259,12 @@ internal class AnnotatedSymbolsResolver(
             annotationName = AUTOBINDS_INTO_SET_NAME,
         ) ?: return
 
+        val bindTargets = bindTypesResolver.findBindToKTypes(annotatedClass, AUTOBINDS_INTO_SET_NAME)
+        if (bindTargets != null &&
+                !bindTypesResolver.validateBindTargets(annotatedClass, bindTargets, AUTOBINDS_INTO_SET_NAME)) {
+            return
+        }
+
         val moduleInfo = ModuleInfo(
             annotatedClass = annotatedClass,
             hiltComponentClassName = resolved.hiltComponentClassName,
@@ -251,7 +273,8 @@ internal class AnnotatedSymbolsResolver(
             moduleNameSuffix = "__IntoSetModule",
             hasScopeAnnotation = resolved.hasScopeAnnotation,
             isObjectModuleRequired = resolved.isObjectModuleRequired,
-            annotationName = requireNotNull(AutoBindsIntoSet::class.simpleName)
+            annotationName = requireNotNull(AutoBindsIntoSet::class.simpleName),
+            bindTargets = bindTargets,
         )
         onGenerateHiltModule.invoke(ModuleType.IntoSet, moduleInfo)
     }

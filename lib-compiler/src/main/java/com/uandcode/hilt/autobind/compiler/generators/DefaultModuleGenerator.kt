@@ -37,7 +37,7 @@ internal class DefaultModuleGenerator(
             return null
         }
 
-        val targetSuperTypes = annotatedClass.getTargetSuperTypes()
+        val targetSuperTypes = moduleInfo.bindTargets ?: annotatedClass.getTargetSuperTypes()
         if (targetSuperTypes.isEmpty()) {
             logNoImplementedSuperTypes(annotatedClass)
             return null

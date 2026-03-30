@@ -489,4 +489,109 @@ class MetaAnnotationBindingTest {
         result.assertCompilationError()
         assertTrue(result.messages.contains("different scopes"))
     }
+
+    @Test
+    fun `bindTo on meta-annotation restricts bindings to specified subset of supertypes`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            interface Repo
+            interface Closeable
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(bindTo = [Repo::class])
+            annotation class BindToRepo
+
+            @BindToRepo
+            class RepoImpl @Inject constructor() : Repo, Closeable
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface RepoImplModule {
+              @Binds
+              public fun bindToRepo(`impl`: RepoImpl): Repo
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `bindTo on meta-annotation can target a grandparent class`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            interface GrandParent
+            open class Parent : GrandParent
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(bindTo = [GrandParent::class])
+            annotation class BindToGrandParent
+
+            @BindToGrandParent
+            class Child @Inject constructor() : Parent()
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildModule {
+              @Binds
+              public fun bindToGrandParent(`impl`: Child): GrandParent
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `error when bindTo on meta-annotation targets a non-supertype of the annotated class`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            interface Repo
+            interface Unrelated
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(bindTo = [Unrelated::class])
+            annotation class BindToUnrelated
+
+            @BindToUnrelated
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("is not a supertype of 'RepoImpl'"))
+    }
+
 }
