@@ -15,6 +15,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import dagger.Binds
+import dagger.Provides
 import javax.inject.Inject
 
 /**
@@ -55,11 +56,20 @@ internal class DefaultModuleGenerator(
             return null
         }
 
-        return TypeSpec
-            .interfaceBuilder(className = moduleClassName)
+        val typeSpecHeader = if (isObjectModuleRequired) {
+            TypeSpec.objectBuilder(className = moduleClassName)
+        } else {
+            TypeSpec.interfaceBuilder(className = moduleClassName)
+        }
+
+        return typeSpecHeader
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
-                addBindFunctions(moduleInfo, originClassName, targetInterfaces)
+                if (isObjectModuleRequired) {
+                    addProvideFunctions(moduleInfo, originClassName, targetInterfaces)
+                } else {
+                    addBindFunctions(moduleInfo, originClassName, targetInterfaces)
+                }
             }
             .build()
     }
@@ -73,6 +83,25 @@ internal class DefaultModuleGenerator(
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .addModifiers(KModifier.ABSTRACT)
+            .returns(it.interfaceTypeName)
+            .build()
+        addFunction(funSpec)
+    }
+
+    private fun TypeSpec.Builder.addProvideFunctions(
+        moduleInfo: ModuleInfo,
+        originClassName: ClassName,
+        targetInterfaces: List<KSType>,
+    ) = forEachTargetInterface(moduleInfo, targetInterfaces) {
+        val funSpec = FunSpec.builder(it.functionName)
+            .addParameter(name = "impl", type = originClassName)
+            .addAnnotation(Provides::class)
+            .apply {
+                if (moduleInfo.hasScopeAnnotation && moduleInfo.isObjectModuleRequired) {
+                    addAnnotation(moduleInfo.scopeClassName)
+                }
+            }
+            .addCode("return impl")
             .returns(it.interfaceTypeName)
             .build()
         addFunction(funSpec)

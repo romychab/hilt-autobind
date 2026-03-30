@@ -45,8 +45,8 @@ internal class ClassFactoryModuleGenerator(
         val createMethod = factoryDeclaration.getDeclaredFunctions()
             .firstOrNull { it.simpleName.asString() == CREATE_METHOD &&
                     it.parameters.singleOrNull()?.isKClassType() == true }
-        val isAutoScoped = createMethod
-            ?.isAnnotationPresent(AutoScoped::class) == true
+        val isAutoScoped = createMethod?.isAnnotationPresent(AutoScoped::class) == true
+                || moduleInfo.hasScopeAnnotation
 
         return TypeSpec.objectBuilder(moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
