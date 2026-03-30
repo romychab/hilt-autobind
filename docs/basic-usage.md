@@ -5,6 +5,7 @@
 - [Single interface binding](#single-interface-binding)
 - [Multiple interfaces](#multiple-interfaces)
 - [Generic interfaces](#generic-interfaces)
+- [Parent class binding](#parent-class-binding)
 - [How it works](#how-it-works)
 - [Requirements for annotated classes](#requirements-for-annotated-classes)
 
@@ -97,14 +98,53 @@ internal interface StringRepositoryModule {
 }
 ```
 
+## Parent Class Binding
+
+`@AutoBinds` also works when a class extends an `open` or `abstract` parent
+class directly. A binding is generated for the parent class in the same way as
+for interfaces:
+
+```kotlin
+abstract class BaseService
+
+@AutoBinds
+class HomeService @Inject constructor() : BaseService()
+```
+
+**Generated code:**
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface HomeServiceModule {
+    @Binds
+    fun bindToBaseService(impl: HomeService): BaseService
+}
+```
+
+A class can mix parent class and interface supertypes - a binding is generated
+for each direct supertype (excluding `Any`):
+
+```kotlin
+abstract class BaseService
+interface Trackable
+
+@AutoBinds
+class HomeService @Inject constructor() : BaseService(), Trackable
+```
+
+This generates a single module with `@Binds` functions for both `BaseService`
+and `Trackable`.
+
 ## How It Works
 
 Hilt AutoBind is a [KSP](https://github.com/google/ksp) annotation processor
 that runs at compile time. For each class annotated with `@AutoBinds`, it:
 
-1. Finds all directly implemented interfaces.
+1. Finds all direct supertypes (implemented interfaces and extended parent
+   classes, excluding `Any`).
 2. Generates an `internal interface` Hilt module with a `@Binds` function for
-   each interface.
+   each supertype.
 3. Installs the module in the appropriate Hilt component (see
    [Scopes and Components](scopes-and-components.md)).
 
@@ -119,6 +159,6 @@ A class annotated with `@AutoBinds` (in default mode, without a `factory`) must:
 - Be **non-abstract** (no `abstract` modifier).
 - **Not be an inner class** (no `inner` modifier).
 - Have a **primary constructor annotated with `@Inject`**.
-- Implement **at least one interface**.
+- Implement **at least one interface** or extend a **non-`Any` parent class**.
 
 The processor emits a compile-time error if any of these conditions are not met.

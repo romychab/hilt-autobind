@@ -11,8 +11,9 @@
 ## Overview
 
 Use `@AutoBindsIntoSet` to contribute a class into a Dagger multibinding `Set`
-of each directly implemented interface. This lets you collect multiple
-implementations automatically without maintaining a manual module.
+of each direct supertype (implemented interfaces and extended parent classes).
+This lets you collect multiple implementations automatically without maintaining
+a manual module.
 
 ## Contributing to a Set
 
@@ -87,4 +88,4 @@ internal interface LoggingInterceptor__IntoSetModule {
 
 The same class requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes)
 apply: the class must be concrete, non-abstract, not an inner class, have `@Inject` on its
-primary constructor, and implement at least one interface.
+primary constructor, and implement at least one interface or extend a parent class.
