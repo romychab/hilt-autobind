@@ -1,6 +1,6 @@
 @file:OptIn(KspExperimental::class)
 
-package com.uandcode.hilt.autobind.compiler.resolver
+package com.uandcode.hilt.autobind.compiler.resolver.collectors
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.isAnnotationPresent

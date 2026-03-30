@@ -9,7 +9,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.uandcode.hilt.autobind.MetaAutoBindingInfo
-import com.uandcode.hilt.autobind.compiler.METADATA_PACKAGE
+import com.uandcode.hilt.autobind.compiler.Const.METADATA_PACKAGE
 import com.uandcode.hilt.autobind.compiler.MetadataInfo
 
 internal class MetadataGenerator(

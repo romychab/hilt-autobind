@@ -1,11 +1,11 @@
-package com.uandcode.hilt.autobind.compiler.resolver
+package com.uandcode.hilt.autobind.compiler.resolver.collectors
 
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.uandcode.hilt.autobind.compiler.kspFail
 
-internal class BindTypesResolver {
+internal class BindingTypesCollector {
 
     /**
      * Reads the `bindTo` argument from an annotation, returning the list of target types,
