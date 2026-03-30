@@ -37,9 +37,9 @@ internal class DefaultModuleGenerator(
             return null
         }
 
-        val targetInterfaces = annotatedClass.getTargetInterfaces()
-        if (targetInterfaces.isEmpty()) {
-            logNoImplementedInterfaces(annotatedClass)
+        val targetSuperTypes = annotatedClass.getTargetSuperTypes()
+        if (targetSuperTypes.isEmpty()) {
+            logNoImplementedSuperTypes(annotatedClass)
             return null
         }
 
@@ -66,9 +66,9 @@ internal class DefaultModuleGenerator(
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
                 if (isObjectModuleRequired) {
-                    addProvideFunctions(moduleInfo, originClassName, targetInterfaces)
+                    addProvideFunctions(moduleInfo, originClassName, targetSuperTypes)
                 } else {
-                    addBindFunctions(moduleInfo, originClassName, targetInterfaces)
+                    addBindFunctions(moduleInfo, originClassName, targetSuperTypes)
                 }
             }
             .build()
@@ -77,13 +77,13 @@ internal class DefaultModuleGenerator(
     private fun TypeSpec.Builder.addBindFunctions(
         moduleInfo: ModuleInfo,
         originClassName: ClassName,
-        targetInterfaces: List<KSType>,
-    ) = forEachTargetInterface(moduleInfo, targetInterfaces) {
+        targetSuperTypes: List<KSType>,
+    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .addModifiers(KModifier.ABSTRACT)
-            .returns(it.interfaceTypeName)
+            .returns(it.supertypeTypeName)
             .build()
         addFunction(funSpec)
     }
@@ -91,8 +91,8 @@ internal class DefaultModuleGenerator(
     private fun TypeSpec.Builder.addProvideFunctions(
         moduleInfo: ModuleInfo,
         originClassName: ClassName,
-        targetInterfaces: List<KSType>,
-    ) = forEachTargetInterface(moduleInfo, targetInterfaces) {
+        targetSuperTypes: List<KSType>,
+    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Provides::class)
@@ -102,7 +102,7 @@ internal class DefaultModuleGenerator(
                 }
             }
             .addCode("return impl")
-            .returns(it.interfaceTypeName)
+            .returns(it.supertypeTypeName)
             .build()
         addFunction(funSpec)
     }

@@ -39,9 +39,9 @@ internal class IntoSetModuleGenerator(
             return null
         }
 
-        val targetInterfaces = annotatedClass.getTargetInterfaces()
-        if (targetInterfaces.isEmpty()) {
-            logError("must implement at least one interface", annotatedClass)
+        val targetSuperTypes = annotatedClass.getTargetSuperTypes()
+        if (targetSuperTypes.isEmpty()) {
+            logNoImplementedSuperTypes(annotatedClass)
             return null
         }
 
@@ -62,7 +62,7 @@ internal class IntoSetModuleGenerator(
             .interfaceBuilder(className = moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
-                addBindIntoSetFunctions(moduleInfo, originClassName, targetInterfaces)
+                addBindIntoSetFunctions(moduleInfo, originClassName, targetSuperTypes)
             }
             .build()
     }
@@ -70,14 +70,14 @@ internal class IntoSetModuleGenerator(
     private fun TypeSpec.Builder.addBindIntoSetFunctions(
         moduleInfo: ModuleInfo,
         originClassName: ClassName,
-        targetInterfaces: List<KSType>,
-    ) = forEachTargetInterface(moduleInfo, targetInterfaces) {
+        targetSuperTypes: List<KSType>,
+    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .addAnnotation(IntoSet::class)
             .addModifiers(KModifier.ABSTRACT)
-            .returns(it.interfaceTypeName)
+            .returns(it.supertypeTypeName)
             .build()
         addFunction(funSpec)
     }
