@@ -6,6 +6,7 @@
 - [Contributing to a Set](#contributing-to-a-set)
 - [Combining with @AutoBinds](#combining-with-autobinds)
 - [Choosing a component](#choosing-a-component)
+- [Selecting specific binding targets](#selecting-specific-binding-targets)
 - [Generated code](#generated-code)
 
 ## Overview
@@ -71,6 +72,24 @@ class ViewModelInterceptor @Inject constructor() : Interceptor { /* ... */ }
 ```
 
 See [Scopes and Components](scopes-and-components.md) for the full reference.
+
+## Selecting Specific Binding Targets
+
+By default, `@AutoBindsIntoSet` contributes the class to a `Set` of every
+direct supertype. Use `bindTo` to restrict which supertypes are included or to
+target a grandparent:
+
+```kotlin
+interface BaseHandler
+open class AbstractHandler : BaseHandler
+
+// Contributes to Set<BaseHandler> only, skipping AbstractHandler
+@AutoBindsIntoSet(bindTo = [BaseHandler::class])
+class MyHandler @Inject constructor() : AbstractHandler()
+```
+
+`bindTo` accepts any transitive supertype. An error is emitted at compile time
+if a listed type is not a supertype of the annotated class.
 
 ## Generated Code
 

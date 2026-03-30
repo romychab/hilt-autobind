@@ -1,6 +1,7 @@
 package com.uandcode.hilt.autobind.compiler
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.toClassName
 
@@ -16,6 +17,7 @@ internal data class ModuleInfo(
     val annotationName: String,
     val annotationSource: KSClassDeclaration,
     val moduleNameSuffix: String = "Module",
+    val bindTargets: List<KSType>? = null,
 ) {
     val originClassName: ClassName = annotatedClass.toClassName()
     val transformedClassName: String = originClassName.simpleNames.joinToString("__")
