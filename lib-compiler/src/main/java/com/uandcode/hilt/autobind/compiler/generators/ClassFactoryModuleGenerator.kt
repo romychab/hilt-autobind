@@ -5,13 +5,13 @@ package com.uandcode.hilt.autobind.compiler.generators
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredFunctions
 import com.google.devtools.ksp.isAnnotationPresent
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
+import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.factories.AutoScoped
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import dagger.Provides
@@ -21,24 +21,21 @@ import javax.inject.Inject
  * Generates an object-based Hilt module with a `@Provides` function
  * that delegates instance creation to a [ClassBindingFactory].
  */
-internal class ClassFactoryModuleGenerator(
-    private val logger: KSPLogger,
-) {
+internal class ClassFactoryModuleGenerator {
 
     fun generate(
         moduleInfo: ModuleInfo,
         factoryDeclaration: KSClassDeclaration,
-    ): TypeSpec? = with(moduleInfo) {
+    ): TypeSpec = with(moduleInfo) {
 
         val hasInjectAnnotation = factoryDeclaration
             .primaryConstructor
             ?.isAnnotationPresent(Inject::class)
         if (hasInjectAnnotation != true) {
-            logger.error(
+            kspFail(
                 "Factory class must have a primary constructor with @Inject annotation",
                 factoryDeclaration,
             )
-            return null
         }
 
         // Check if create() is annotated with @AutoScoped

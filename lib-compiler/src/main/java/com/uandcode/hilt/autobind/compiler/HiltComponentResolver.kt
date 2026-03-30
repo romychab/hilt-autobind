@@ -1,6 +1,5 @@
 package com.uandcode.hilt.autobind.compiler
 
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.uandcode.hilt.autobind.HiltComponent
@@ -11,9 +10,7 @@ import com.uandcode.hilt.autobind.HiltComponent
  *
  * Returns null if validation fails (scope mismatch).
  */
-internal class HiltComponentResolver(
-    private val logger: KSPLogger,
-) {
+internal class HiltComponentResolver {
 
     /**
      * Holds the resolved component and scope class names.
@@ -22,7 +19,7 @@ internal class HiltComponentResolver(
         val hiltComponentClassName: ClassName,
         val scopeClassName: ClassName,
         val hasScopeAnnotation: Boolean,
-        val isObjectModuleRequired: Boolean,
+        val isScopeOnInject: Boolean,
     )
 
     /**
@@ -40,15 +37,15 @@ internal class HiltComponentResolver(
         annotatedClass: KSClassDeclaration,
         annotationSource: KSClassDeclaration,
         annotationName: String,
-    ): Result? {
+    ): Result {
         var classScopeAnnotation = findScopeAnnotation(annotatedClass)
-        var isObjectModuleRequired = false
+        var isScopeOnInject = false
 
         if (annotationSource.qualifiedName?.asString() != annotatedClass.qualifiedName?.asString()) {
             val annotationScopeAnnotation = findScopeAnnotation(annotationSource)
             if (classScopeAnnotation == null && annotationScopeAnnotation != null) {
                 classScopeAnnotation = annotationScopeAnnotation
-                isObjectModuleRequired = true
+                isScopeOnInject = true
             } else if (classScopeAnnotation != annotationScopeAnnotation && annotationScopeAnnotation != null) {
                 return handleNonMatchingScopes(annotatedClass, classScopeAnnotation,
                     annotationScopeAnnotation, annotationName)
@@ -56,15 +53,15 @@ internal class HiltComponentResolver(
         }
 
         return if (declaredComponent == HiltComponent.Unspecified) {
-            resolveUnspecifiedComponent(classScopeAnnotation, annotatedClass, annotationName, isObjectModuleRequired)
+            resolveUnspecifiedComponent(classScopeAnnotation, annotatedClass, annotationName, isScopeOnInject)
         } else if (classScopeAnnotation != null && classScopeAnnotation != declaredComponent.scopeClass) {
-            handleNonMatchingExplicitComponents(declaredComponent, classScopeAnnotation, annotatedClass, annotationName)
+            failNonMatchingExplicitComponents(declaredComponent, classScopeAnnotation, annotatedClass, annotationName)
         } else {
             Result(
                 hiltComponentClassName = ClassName.bestGuess(declaredComponent.componentClass),
                 scopeClassName = ClassName.bestGuess(declaredComponent.scopeClass),
                 hasScopeAnnotation = classScopeAnnotation != null,
-                isObjectModuleRequired = isObjectModuleRequired,
+                isScopeOnInject = isScopeOnInject,
             )
         }
     }
@@ -73,10 +70,10 @@ internal class HiltComponentResolver(
         classScopeAnnotation: String?,
         annotatedClass: KSClassDeclaration,
         annotationName: String,
-        isObjectModuleRequired: Boolean,
-    ): Result? {
+        isScopeOnInject: Boolean,
+    ): Result {
         val resolved = if (classScopeAnnotation != null) {
-            resolveFromScope(classScopeAnnotation, annotatedClass, annotationName) ?: return null
+            resolveFromScope(classScopeAnnotation, annotatedClass, annotationName)
         } else {
             HiltComponent.Singleton
         }
@@ -84,26 +81,24 @@ internal class HiltComponentResolver(
             hiltComponentClassName = ClassName.bestGuess(resolved.componentClass),
             scopeClassName = ClassName.bestGuess(resolved.scopeClass),
             hasScopeAnnotation = classScopeAnnotation != null,
-            isObjectModuleRequired = isObjectModuleRequired,
+            isScopeOnInject = isScopeOnInject,
         )
     }
 
-    private fun handleNonMatchingExplicitComponents(
+    private fun failNonMatchingExplicitComponents(
         declaredComponent: HiltComponent,
         classScopeAnnotation: String,
         annotatedClass: KSClassDeclaration,
         annotationName: String,
-    ): Result? {
-        // Explicit component: validate scope match if class has a scope annotation
+    ): Nothing {
         val scopeSimpleName = classScopeAnnotation.substringAfterLast('.')
         val expectedScopeSimpleName = declaredComponent.scopeClass.substringAfterLast('.')
-        logger.error(
+        kspFail(
             "@$annotationName: class '${annotatedClass.simpleName.asString()}' is scoped " +
                     "with @$scopeSimpleName but installIn targets " +
                     "${declaredComponent.name} (expected scope is @$expectedScopeSimpleName)",
             annotatedClass,
         )
-        return null
     }
 
     private fun handleNonMatchingScopes(
@@ -111,13 +106,12 @@ internal class HiltComponentResolver(
         classScopeAnnotation: String?,
         annotationSourceScopeAnnotation: String?,
         annotationName: String,
-    ): Result? {
+    ): Result {
         val classScope = classScopeAnnotation ?: "(Undefined)"
         val sourceScope = annotationSourceScopeAnnotation ?: "(Undefined)"
-        logger.error("@$annotationName: class '${annotatedClass.simpleName.asString()}' has " +
+        kspFail("@$annotationName: class '${annotatedClass.simpleName.asString()}' has " +
                 "different scopes. The class is scoped to '$classScope', but the annotation " +
                 "@$annotationName targets '$sourceScope'.", annotatedClass)
-        return null
     }
 
     /**
@@ -125,10 +119,14 @@ internal class HiltComponentResolver(
      * Checks against all known [HiltComponent] scope classes.
      */
     private fun findScopeAnnotation(annotatedClass: KSClassDeclaration): String? {
-        val classAnnotations = annotatedClass.annotations
-            .mapNotNull { it.annotationType.resolve().declaration.qualifiedName?.asString() }
-            .toSet()
-        return KNOWN_SCOPES.firstOrNull { it in classAnnotations }
+        return annotatedClass.annotations
+            .map { it.annotationType.resolve().declaration }
+            .firstOrNull { annotationDeclaration ->
+                annotationDeclaration.annotations.any {
+                    it.shortName.asString() == "Scope"
+                }
+            }
+            ?.qualifiedName?.asString()
     }
 
     /**
@@ -139,34 +137,15 @@ internal class HiltComponentResolver(
         scopeQualifiedName: String,
         annotatedClass: KSClassDeclaration,
         annotationName: String,
-    ): HiltComponent? {
-        val match = SCOPE_TO_COMPONENT[scopeQualifiedName]
-        if (match == null) {
-            logger.error(
-                "@$annotationName: unable to resolve Hilt component for scope " +
+    ): HiltComponent {
+        return HiltComponent.entries.firstOrNull {
+            it.scopeClass == scopeQualifiedName
+        } ?: kspFail(
+            "@$annotationName: unable to resolve Hilt component for scope " +
                     "'${scopeQualifiedName.substringAfterLast('.')}' on class " +
                     "'${annotatedClass.simpleName.asString()}'",
-                annotatedClass,
-            )
-            return null
-        }
-        return match
+            annotatedClass,
+        )
     }
 
-    private companion object {
-        /** Map from scope annotation qualified name to [HiltComponent]. */
-        val SCOPE_TO_COMPONENT: Map<String, HiltComponent> = buildMap {
-            for (component in HiltComponent.entries) {
-                if (component == HiltComponent.Unspecified
-                    // @ViewScoped maps to View
-                    || component == HiltComponent.ViewWithFragment) continue
-                putIfAbsent(component.scopeClass, component)
-            }
-        }
-
-        val KNOWN_SCOPES: Set<String> = HiltComponent.entries
-            .filter { it != HiltComponent.Unspecified }
-            .map { it.scopeClass }
-            .toSet()
-    }
 }

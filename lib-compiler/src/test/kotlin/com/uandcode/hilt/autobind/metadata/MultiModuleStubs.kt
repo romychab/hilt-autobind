@@ -1,6 +1,7 @@
 package com.uandcode.hilt.autobind.metadata
 
 import com.uandcode.hilt.autobind.AutoBinds
+import com.uandcode.hilt.autobind.AutoBindsIntoSet
 import com.uandcode.hilt.autobind.HiltComponent
 import com.uandcode.hilt.autobind.MetaAutoBindingInfo
 import com.uandcode.hilt.autobind.factories.AutoScoped
@@ -16,6 +17,10 @@ import kotlin.reflect.KClass
 @AutoBinds(installIn = HiltComponent.Activity)
 @Target(AnnotationTarget.CLASS)
 annotation class MultiModuleBindToActivity
+
+@AutoBindsIntoSet(installIn = HiltComponent.Activity)
+@Target(AnnotationTarget.CLASS)
+annotation class MultiModuleBindIntoSetActivity
 
 @AutoBinds(factory = MultiModuleFactory::class)
 @Target(AnnotationTarget.CLASS)
@@ -39,3 +44,8 @@ class __com__uandcode__hilt__autobind__metadata__MultiModuleFactoryBinding
     qualifiedMetaAnnotationName = "com.uandcode.hilt.autobind.metadata.MultiModuleBindToActivity"
 )
 class __com__uandcode__hilt__autobind__metadata__MultiModuleBindToActivity
+
+@MetaAutoBindingInfo(
+    qualifiedMetaAnnotationName = "com.uandcode.hilt.autobind.metadata.MultiModuleBindIntoSetActivity"
+)
+class __com__uandcode__hilt__autobind__metadata__MultiModuleBindIntoSetActivity

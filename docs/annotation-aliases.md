@@ -7,6 +7,7 @@
 - [Forwarding installIn and scope](#forwarding-installin-and-scope)
 - [Forwarding a factory](#forwarding-a-factory)
 - [Multiple classes with one alias](#multiple-classes-with-one-alias)
+- [Using @AutoBindsIntoSet as an alias](#using-autobindsintosetas-an-alias)
 - [Requirements for alias annotations](#requirements-for-alias-annotations)
 
 ## Overview
@@ -14,7 +15,8 @@
 When many classes share the same `@AutoBinds(factory = ...)` or `installIn`
 configuration, you can define a custom annotation that carries those parameters
 as defaults. Applying that annotation then has the same effect as applying
-`@AutoBinds` with the same arguments.
+`@AutoBinds` with the same arguments. The same alias mechanism is also supported
+for `@AutoBindsIntoSet`.
 
 This is useful for reducing boilerplate when binding many classes through a
 shared factory (e.g., Retrofit interfaces):
@@ -218,13 +220,55 @@ class RepoBImpl @Inject constructor() : RepoB
 This generates `RepoAImplModule.kt` and `RepoBImplModule.kt` as separate files,
 just as if each class had `@AutoBinds` applied directly.
 
+## Using @AutoBindsIntoSet as an Alias
+
+`@AutoBindsIntoSet` supports the same alias mechanism as `@AutoBinds`. Annotate
+an annotation class with `@AutoBindsIntoSet` and every class annotated with that
+alias is contributed to the multibinding `Set` automatically:
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoSet
+annotation class ContributeToSet
+
+@ContributeToSet
+class LoggingInterceptor @Inject constructor() : Interceptor
+
+@ContributeToSet
+class AuthInterceptor @Inject constructor() : Interceptor
+```
+
+The generated files are named with the `__IntoSetModule` suffix, just as for
+direct `@AutoBindsIntoSet` usage.
+
+All parameters - `installIn`, `bindTo`, and scope annotations are forwarded
+the same way as with `@AutoBinds` aliases:
+
+```kotlin
+// pin the component in the alias
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoSet(installIn = HiltComponent.Activity)
+annotation class ContributeActivityHandler
+
+// auto-detect component from scope annotation on the alias
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoSet
+@ActivityScoped
+annotation class ContributeActivityScopedHandler
+
+// restrict which supertypes are contributed to the Set
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoSet(bindTo = [Interceptor::class])
+annotation class ContributeInterceptor
+```
+
 ## Requirements for Alias Annotations
 
-An annotation used as an `@AutoBinds` alias must:
+An annotation used as an `@AutoBinds` or `@AutoBindsIntoSet` alias must:
 
 - Be an **annotation class** (declared with the `annotation class` keyword).
 - Declare **`@Target(AnnotationTarget.CLASS)`** so it can be applied to classes and interfaces.
-- Carry `@AutoBinds` (with any desired parameters) directly on its declaration.
+- Carry `@AutoBinds` or `@AutoBindsIntoSet` (with any desired parameters) directly on its declaration.
 
 The processor emits a compile-time error if `@Target(AnnotationTarget.CLASS)` is
 missing.

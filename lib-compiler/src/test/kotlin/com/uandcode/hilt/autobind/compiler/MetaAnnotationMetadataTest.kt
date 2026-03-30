@@ -194,6 +194,89 @@ class MetaAnnotationMetadataTest {
     }
 
     @Test
+    fun `generates carrier class for @AutoBindsIntoSet meta-annotation`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoSet
+            annotation class ContributeToSet
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("__test__ContributeToSet.kt")
+        generated.assertContent("""
+            package com.uandcode.hilt.autobind.metadata
+
+            import com.uandcode.hilt.autobind.MetaAutoBindingInfo
+
+            @MetaAutoBindingInfo(qualifiedMetaAnnotationName = "test.ContributeToSet")
+            internal class __test__ContributeToSet
+        """.trimIndent())
+    }
+
+    @Test
+    fun `does not generate carrier class for direct @AutoBindsIntoSet usage`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+            import javax.inject.Inject
+
+            interface Interceptor
+
+            @AutoBindsIntoSet
+            class LoggingInterceptor @Inject constructor() : Interceptor
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        result.assertHasGeneratedFile("LoggingInterceptor__IntoSetModule.kt")
+        result.assertNoGeneratedFile("__test__LoggingInterceptor.kt")
+    }
+
+    @Test
+    fun `@AutoBindsIntoSet annotation alias from other module must be processed`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.metadata.MultiModuleBindIntoSetActivity
+            import javax.inject.Inject
+
+            interface Interceptor
+
+            @MultiModuleBindIntoSetActivity
+            class LoggingInterceptor @Inject constructor() : Interceptor
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        val generated = result.assertHasGeneratedFile("LoggingInterceptor__IntoSetModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.android.components.ActivityComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(ActivityComponent::class)
+            internal interface LoggingInterceptor__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToInterceptor(`impl`: LoggingInterceptor): Interceptor
+            }
+        """.trimIndent())
+    }
+
+    @Test
     fun `annotation alias with scoped class factory from other module must be processed`() {
         val source = SourceFile.kotlin("Test.kt", """
             package test

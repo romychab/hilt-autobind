@@ -34,8 +34,8 @@ import kotlin.reflect.KClass
  *   types are used instead of all direct supertypes. Each type must be a transitive supertype
  *   of the annotated class; a compile-time error is emitted otherwise.
  */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
+@Retention(AnnotationRetention.BINARY)
 public annotation class AutoBindsIntoSet(
     val installIn: HiltComponent = HiltComponent.Unspecified,
     val bindTo: Array<KClass<*>> = [],

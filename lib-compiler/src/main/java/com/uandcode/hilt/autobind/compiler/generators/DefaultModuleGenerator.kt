@@ -15,7 +15,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import dagger.Binds
-import dagger.Provides
 import javax.inject.Inject
 
 /**
@@ -26,50 +25,35 @@ internal class DefaultModuleGenerator(
     logger: KSPLogger,
 ) : AbstractModuleGenerator(logger) {
 
-    fun generate(moduleInfo: ModuleInfo): TypeSpec? = with(moduleInfo) {
+    fun generate(moduleInfo: ModuleInfo): TypeSpec = with(moduleInfo) {
         if (annotatedClass.classKind != ClassKind.CLASS) {
-            logError("must be a class (not object, interface, etc.)", annotatedClass)
-            return null
+            commonKspFail("must be a class (not object, interface, etc.)", annotatedClass)
         }
 
         if (Modifier.INNER in annotatedClass.modifiers) {
-            logError("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
-            return null
+            commonKspFail("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
         }
 
         val targetSuperTypes = moduleInfo.bindTargets ?: annotatedClass.getTargetSuperTypes()
         if (targetSuperTypes.isEmpty()) {
             logNoImplementedSuperTypes(annotatedClass)
-            return null
         }
 
         if (annotatedClass.isAbstract()) {
-            logError("must be a non-abstract class", annotatedClass)
-            return null
+            commonKspFail("must be a non-abstract class", annotatedClass)
         }
 
         val hasInjectAnnotation = annotatedClass
             .primaryConstructor
             ?.isAnnotationPresent(Inject::class)
         if (hasInjectAnnotation != true) {
-            logError("must have a primary constructor with @Inject annotation", annotatedClass)
-            return null
+            commonKspFail("must have a primary constructor with @Inject annotation", annotatedClass)
         }
 
-        val typeSpecHeader = if (isObjectModuleRequired) {
-            TypeSpec.objectBuilder(className = moduleClassName)
-        } else {
-            TypeSpec.interfaceBuilder(className = moduleClassName)
-        }
-
-        return typeSpecHeader
+        return TypeSpec.interfaceBuilder(className = moduleClassName)
             .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
             .apply {
-                if (isObjectModuleRequired) {
-                    addProvideFunctions(moduleInfo, originClassName, targetSuperTypes)
-                } else {
-                    addBindFunctions(moduleInfo, originClassName, targetSuperTypes)
-                }
+                addBindFunctions(moduleInfo, originClassName, targetSuperTypes)
             }
             .build()
     }
@@ -82,26 +66,12 @@ internal class DefaultModuleGenerator(
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
-            .addModifiers(KModifier.ABSTRACT)
-            .returns(it.supertypeTypeName)
-            .build()
-        addFunction(funSpec)
-    }
-
-    private fun TypeSpec.Builder.addProvideFunctions(
-        moduleInfo: ModuleInfo,
-        originClassName: ClassName,
-        targetSuperTypes: List<KSType>,
-    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
-        val funSpec = FunSpec.builder(it.functionName)
-            .addParameter(name = "impl", type = originClassName)
-            .addAnnotation(Provides::class)
             .apply {
-                if (moduleInfo.hasScopeAnnotation && moduleInfo.isObjectModuleRequired) {
+                if (moduleInfo.hasScopeAnnotation && moduleInfo.isScopeOnInject) {
                     addAnnotation(moduleInfo.scopeClassName)
                 }
             }
-            .addCode("return impl")
+            .addModifiers(KModifier.ABSTRACT)
             .returns(it.supertypeTypeName)
             .build()
         addFunction(funSpec)

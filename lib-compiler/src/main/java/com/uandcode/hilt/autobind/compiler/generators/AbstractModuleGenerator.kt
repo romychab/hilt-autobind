@@ -7,13 +7,14 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
+import com.uandcode.hilt.autobind.compiler.kspFail
 
 internal abstract class AbstractModuleGenerator(
     protected val logger: KSPLogger,
 ) {
 
-    protected fun ModuleInfo.logError(message: String, annotatedClass: KSClassDeclaration) {
-        logger.error(
+    protected fun ModuleInfo.commonKspFail(message: String, annotatedClass: KSClassDeclaration): Nothing {
+        kspFail(
             message = "The class '${annotatedClass.simpleName.asString()}' annotated with " +
                     "@$annotationName annotation $message",
             symbol = annotatedClass,
@@ -48,7 +49,7 @@ internal abstract class AbstractModuleGenerator(
     }
 
     protected fun ModuleInfo.logNoImplementedSuperTypes(annotatedClass: KSClassDeclaration) {
-        logError("must implement at least one interface or extend a super-class", annotatedClass)
+        commonKspFail("must implement at least one interface or extend a super-class", annotatedClass)
     }
 
     class TargetSuperType(

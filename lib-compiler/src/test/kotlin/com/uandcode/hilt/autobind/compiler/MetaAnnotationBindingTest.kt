@@ -341,18 +341,18 @@ class MetaAnnotationBindingTest {
         generated.assertContent("""
             package test
 
+            import dagger.Binds
             import dagger.Module
-            import dagger.Provides
             import dagger.hilt.InstallIn
             import dagger.hilt.android.components.ActivityComponent
             import dagger.hilt.android.scopes.ActivityScoped
             
             @Module
             @InstallIn(ActivityComponent::class)
-            internal object MainPresenterModule {
-              @Provides
+            internal interface MainPresenterModule {
+              @Binds
               @ActivityScoped
-              public fun bindToPresenter(`impl`: MainPresenter): Presenter = impl
+              public fun bindToPresenter(`impl`: MainPresenter): Presenter
             }
         """.trimIndent())
     }
@@ -592,6 +592,31 @@ class MetaAnnotationBindingTest {
         val result = compile(source)
         result.assertCompilationError()
         assertTrue(result.messages.contains("is not a supertype of 'RepoImpl'"))
+    }
+
+    @Test
+    fun `aliases on aliases are not supported`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            annotation class Alias1
+
+            @Target(AnnotationTarget.CLASS)
+            @Alias1
+            annotation class Alias2
+
+            @Alias2
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("must be a class"))
     }
 
 }
