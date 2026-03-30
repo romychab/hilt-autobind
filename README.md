@@ -70,7 +70,7 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
 | [Multibinding](docs/multibinding.md)                 | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
 | [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
-| [Multi-Module Projects](docs/multi-module.md)        | —                               | Per-module setup in multi-module projects                                           |
+| [Multi-Module Projects](docs/multi-module.md)        | Aliases                         | Per-module setup in multi-module projects                                           |
 
 ## Requirements
 

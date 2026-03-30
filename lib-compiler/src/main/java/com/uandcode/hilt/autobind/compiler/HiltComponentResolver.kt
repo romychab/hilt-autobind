@@ -21,6 +21,8 @@ internal class HiltComponentResolver(
     data class Result(
         val hiltComponentClassName: ClassName,
         val scopeClassName: ClassName,
+        val hasScopeAnnotation: Boolean,
+        val isObjectModuleRequired: Boolean,
     )
 
     /**
@@ -36,18 +38,33 @@ internal class HiltComponentResolver(
     fun resolve(
         declaredComponent: HiltComponent,
         annotatedClass: KSClassDeclaration,
+        annotationSource: KSClassDeclaration,
         annotationName: String,
     ): Result? {
-        val classScopeAnnotation = findScopeAnnotation(annotatedClass)
+        var classScopeAnnotation = findScopeAnnotation(annotatedClass)
+        var isObjectModuleRequired = false
+
+        if (annotationSource.qualifiedName?.asString() != annotatedClass.qualifiedName?.asString()) {
+            val annotationScopeAnnotation = findScopeAnnotation(annotationSource)
+            if (classScopeAnnotation == null && annotationScopeAnnotation != null) {
+                classScopeAnnotation = annotationScopeAnnotation
+                isObjectModuleRequired = true
+            } else if (classScopeAnnotation != annotationScopeAnnotation && annotationScopeAnnotation != null) {
+                return handleNonMatchingScopes(annotatedClass, classScopeAnnotation,
+                    annotationScopeAnnotation, annotationName)
+            }
+        }
 
         return if (declaredComponent == HiltComponent.Unspecified) {
-            resolveUnspecifiedComponent(classScopeAnnotation, annotatedClass, annotationName)
+            resolveUnspecifiedComponent(classScopeAnnotation, annotatedClass, annotationName, isObjectModuleRequired)
         } else if (classScopeAnnotation != null && classScopeAnnotation != declaredComponent.scopeClass) {
             handleNonMatchingExplicitComponents(declaredComponent, classScopeAnnotation, annotatedClass, annotationName)
         } else {
             Result(
                 hiltComponentClassName = ClassName.bestGuess(declaredComponent.componentClass),
                 scopeClassName = ClassName.bestGuess(declaredComponent.scopeClass),
+                hasScopeAnnotation = classScopeAnnotation != null,
+                isObjectModuleRequired = isObjectModuleRequired,
             )
         }
     }
@@ -56,6 +73,7 @@ internal class HiltComponentResolver(
         classScopeAnnotation: String?,
         annotatedClass: KSClassDeclaration,
         annotationName: String,
+        isObjectModuleRequired: Boolean,
     ): Result? {
         val resolved = if (classScopeAnnotation != null) {
             resolveFromScope(classScopeAnnotation, annotatedClass, annotationName) ?: return null
@@ -65,6 +83,8 @@ internal class HiltComponentResolver(
         return Result(
             hiltComponentClassName = ClassName.bestGuess(resolved.componentClass),
             scopeClassName = ClassName.bestGuess(resolved.scopeClass),
+            hasScopeAnnotation = classScopeAnnotation != null,
+            isObjectModuleRequired = isObjectModuleRequired,
         )
     }
 
@@ -80,9 +100,23 @@ internal class HiltComponentResolver(
         logger.error(
             "@$annotationName: class '${annotatedClass.simpleName.asString()}' is scoped " +
                     "with @$scopeSimpleName but installIn targets " +
-                    "${declaredComponent.name} (expected @$expectedScopeSimpleName)",
+                    "${declaredComponent.name} (expected scope is @$expectedScopeSimpleName)",
             annotatedClass,
         )
+        return null
+    }
+
+    private fun handleNonMatchingScopes(
+        annotatedClass: KSClassDeclaration,
+        classScopeAnnotation: String?,
+        annotationSourceScopeAnnotation: String?,
+        annotationName: String,
+    ): Result? {
+        val classScope = classScopeAnnotation ?: "(Undefined)"
+        val sourceScope = annotationSourceScopeAnnotation ?: "(Undefined)"
+        logger.error("@$annotationName: class '${annotatedClass.simpleName.asString()}' has " +
+                "different scopes. The class is scoped to '$classScope', but the annotation " +
+                "@$annotationName targets '$sourceScope'.", annotatedClass)
         return null
     }
 

@@ -2,6 +2,7 @@ package com.uandcode.hilt.autobind.compiler
 
 import com.tschuchort.compiletesting.SourceFile
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertCompilationError
+import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertContent
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertHasGeneratedFile
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.assertOk
 import com.uandcode.hilt.autobind.compiler.CompilationTestHelper.compile
@@ -28,10 +29,23 @@ class IntoSetBindingTest {
         result.assertOk()
 
         val generated = result.assertHasGeneratedFile("LoggingInterceptor__IntoSetModule.kt")
-        assertTrue(generated.contains("@Binds"))
-        assertTrue(generated.contains("@IntoSet"))
-        assertTrue(generated.contains("fun bindToInterceptor"))
-        assertTrue(generated.contains("SingletonComponent::class"))
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface LoggingInterceptor__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToInterceptor(`impl`: LoggingInterceptor): Interceptor
+            }
+        """.trimIndent())
     }
 
     @Test
@@ -54,11 +68,40 @@ class IntoSetBindingTest {
         result.assertOk()
 
         val bindsModule = result.assertHasGeneratedFile("DefaultInterceptorModule.kt")
-        assertTrue(bindsModule.contains("@Binds"))
+        bindsModule.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface DefaultInterceptorModule {
+              @Binds
+              public fun bindToInterceptor(`impl`: DefaultInterceptor): Interceptor
+            }
+        """.trimIndent())
 
         val intoSetModule = result.assertHasGeneratedFile("DefaultInterceptor__IntoSetModule.kt")
-        assertTrue(intoSetModule.contains("@Binds"))
-        assertTrue(intoSetModule.contains("@IntoSet"))
+        intoSetModule.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface DefaultInterceptor__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToInterceptor(`impl`: DefaultInterceptor): Interceptor
+            }
+        """.trimIndent())
     }
 
     @Test
@@ -116,6 +159,22 @@ class IntoSetBindingTest {
         result.assertOk()
 
         val generated = result.assertHasGeneratedFile("ScopedInterceptor__IntoSetModule.kt")
-        assertTrue(generated.contains("SingletonComponent::class"))
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ScopedInterceptor__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToInterceptor(`impl`: ScopedInterceptor): Interceptor
+            }
+        """.trimIndent())
     }
 }

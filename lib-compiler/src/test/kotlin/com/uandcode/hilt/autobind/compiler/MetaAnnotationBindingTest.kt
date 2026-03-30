@@ -284,4 +284,209 @@ class MetaAnnotationBindingTest {
         result.assertCompilationError()
         assertTrue(result.messages.contains("must declare @Target(AnnotationTarget.CLASS)"))
     }
+
+    @Test
+    fun `error when scope annotation on meta-annotation does not match installIn component`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import com.uandcode.hilt.autobind.HiltComponent
+            import dagger.hilt.android.scopes.ActivityScoped
+            import javax.inject.Inject
+
+            interface Presenter
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(installIn = HiltComponent.Fragment)
+            @ActivityScoped
+            annotation class BindToActivity
+
+            @BindToActivity
+            class MainPresenter @Inject constructor() : Presenter
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+
+        assertTrue(result.messages.contains("class 'MainPresenter' is scoped with " +
+                "@ActivityScoped but installIn targets Fragment (expected scope " +
+                "is @FragmentScoped)"))
+    }
+
+    @Test
+    fun `scope annotation on meta-annotation auto-detects component for Binds module`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import dagger.hilt.android.scopes.ActivityScoped
+            import javax.inject.Inject
+
+            interface Presenter
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @ActivityScoped
+            annotation class BindToActivity
+
+            @BindToActivity
+            class MainPresenter @Inject constructor() : Presenter
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("MainPresenterModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.android.components.ActivityComponent
+            import dagger.hilt.android.scopes.ActivityScoped
+            
+            @Module
+            @InstallIn(ActivityComponent::class)
+            internal object MainPresenterModule {
+              @Provides
+              @ActivityScoped
+              public fun bindToPresenter(`impl`: MainPresenter): Presenter = impl
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `scope annotation on meta-annotation generates scoped Provides with ClassFactory`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import com.uandcode.hilt.autobind.factories.ClassBindingFactory
+            import javax.inject.Inject
+            import javax.inject.Singleton
+            import kotlin.reflect.KClass
+
+            interface BooksApi
+
+            class RetrofitFactory @Inject constructor() : ClassBindingFactory {
+                override fun <T : Any> create(kClass: KClass<T>): T {
+                    throw UnsupportedOperationException()
+                }
+            }
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(factory = RetrofitFactory::class)
+            @Singleton
+            annotation class BindRetrofit
+
+            @BindRetrofit
+            interface BooksApiImpl : BooksApi
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("BooksApiImplModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import javax.inject.Singleton
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal object BooksApiImplModule {
+              @Provides
+              @Singleton
+              public fun provideBooksApiImpl(factory: RetrofitFactory): BooksApiImpl = factory.create(BooksApiImpl::class)
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `scope annotation on meta-annotation generates scoped Provides with DelegateFactory`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
+            import javax.inject.Inject
+            import javax.inject.Singleton
+
+            interface NoteDao
+
+            class MyDbFactory @Inject constructor() : DelegateBindingFactory<MyDb> {
+                override fun provideDelegate(): MyDb {
+                    throw UnsupportedOperationException()
+                }
+            }
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds(factory = MyDbFactory::class)
+            @Singleton
+            annotation class BindDb
+
+            @BindDb
+            abstract class MyDb {
+                abstract fun noteDao(): NoteDao
+            }
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("MyDbModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Module
+            import dagger.Provides
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import javax.inject.Singleton
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal object MyDbModule {
+              @Provides
+              @Singleton
+              public fun provideMyDb(factory: MyDbFactory): MyDb = factory.provideDelegate()
+
+              @Provides
+              public fun provideNoteDao(`delegate`: MyDb): NoteDao = delegate.noteDao()
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `error when class scope conflicts with meta-annotation scope`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import dagger.hilt.android.scopes.ActivityScoped
+            import javax.inject.Inject
+            import javax.inject.Singleton
+
+            interface Presenter
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @Singleton
+            annotation class MySingletonBind
+
+            @MySingletonBind
+            @ActivityScoped
+            class MainPresenter @Inject constructor() : Presenter
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("different scopes"))
+    }
 }
