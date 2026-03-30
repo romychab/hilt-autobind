@@ -18,6 +18,7 @@ import com.uandcode.hilt.autobind.compiler.generators.DefaultModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.DelegateFactoryModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.IntoSetModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.MetadataGenerator
+import com.uandcode.hilt.autobind.compiler.resolver.AnnotatedSymbolsResolver
 
 class AutoBindingSymbolProcessor(
     private val logger: KSPLogger,

@@ -6,6 +6,7 @@
 - [Multiple interfaces](#multiple-interfaces)
 - [Generic interfaces](#generic-interfaces)
 - [Parent class binding](#parent-class-binding)
+- [Selecting specific binding targets](#selecting-specific-binding-targets)
 - [How it works](#how-it-works)
 - [Requirements for annotated classes](#requirements-for-annotated-classes)
 
@@ -135,6 +136,37 @@ class HomeService @Inject constructor() : BaseService(), Trackable
 
 This generates a single module with `@Binds` functions for both `BaseService`
 and `Trackable`.
+
+## Selecting Specific Binding Targets
+
+By default, `@AutoBinds` generates a binding for every direct supertype. Use
+`bindTo` to restrict which supertypes are included, or to target a
+grandparent class that is not a direct supertype:
+
+```kotlin
+interface Repo
+interface Closeable
+interface Auditable
+
+// Only binds to Repo; Closeable and Auditable are excluded
+@AutoBinds(bindTo = [Repo::class])
+class RepoImpl @Inject constructor() : Repo, Closeable, Auditable
+```
+
+```kotlin
+interface GrandParent
+open class Parent : GrandParent
+
+// Binds to GrandParent even though it's not a direct supertype
+@AutoBinds(bindTo = [GrandParent::class])
+class Child @Inject constructor() : Parent()
+```
+
+`bindTo` accepts any transitive supertype of the annotated class. The
+processor emits a compile-time error if a listed type is not a supertype
+at all.
+
+When `bindTo` is empty (the default), all direct supertypes are used.
 
 ## How It Works
 
