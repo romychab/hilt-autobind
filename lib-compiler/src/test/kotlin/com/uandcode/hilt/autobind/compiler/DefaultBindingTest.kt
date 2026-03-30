@@ -100,7 +100,8 @@ class DefaultBindingTest {
 
         val result = compile(source)
         result.assertCompilationError()
-        assertTrue(result.messages.contains("must implement at least one interface"))
+        assertTrue(result.messages.contains("must implement at least one interface " +
+                "or extend a super-class"))
     }
 
     @Test
@@ -286,6 +287,115 @@ class DefaultBindingTest {
 
               @Binds
               public fun bindToCloseable_java_io(`impl`: MyImpl): java.io.Closeable
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `binds direct parent classes`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            open class ParentClass
+
+            @AutoBinds
+            class ChildClass @Inject constructor() : ParentClass()
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClassModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClassModule {
+              @Binds
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `binds mixed direct parent class and interfaces`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            open class ParentClass
+            interface Interface
+
+            @AutoBinds
+            class ChildClass @Inject constructor() : ParentClass(), Interface
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClassModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClassModule {
+              @Binds
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
+              @Binds
+              public fun bindToInterface(`impl`: ChildClass): Interface
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `no bindings for grand-parents`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+
+            open class GrandParentClass
+            open class ParentClass : GrandParentClass()
+
+            @AutoBinds
+            class ChildClass @Inject constructor() : ParentClass()
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClassModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClassModule {
+              @Binds
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
             }
         """.trimIndent())
     }

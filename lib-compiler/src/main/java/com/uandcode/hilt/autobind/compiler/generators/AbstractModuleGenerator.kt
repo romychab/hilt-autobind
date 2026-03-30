@@ -20,14 +20,14 @@ internal abstract class AbstractModuleGenerator(
         )
     }
 
-    protected fun forEachTargetInterface(
+    protected fun forEachTargetSuperType(
         moduleInfo: ModuleInfo,
-        targetInterfaces: List<KSType>,
-        block: (TargetInterface) -> Unit,
+        targetSuperTypes: List<KSType>,
+        block: (TargetSuperType) -> Unit,
     ) = with(moduleInfo) {
-        val classNames = targetInterfaces.mapNotNull { (it.declaration as? KSClassDeclaration)?.toClassName() }
+        val classNames = targetSuperTypes.mapNotNull { (it.declaration as? KSClassDeclaration)?.toClassName() }
         if (classNames.isEmpty()) {
-            logNoImplementedInterfaces(annotatedClass)
+            logNoImplementedSuperTypes(annotatedClass)
             return
         }
         val duplicateSimpleNames = classNames
@@ -35,24 +35,24 @@ internal abstract class AbstractModuleGenerator(
             .filterValues { it.size > 1 }
             .keys
 
-        for ((index, targetInterface) in targetInterfaces.withIndex()) {
-            val interfaceClassName = classNames[index]
-            val interfaceTypeName = targetInterface.toTypeName()
-            val functionName = if (interfaceClassName.simpleName in duplicateSimpleNames) {
-                "bindTo${interfaceClassName.simpleName}_${interfaceClassName.packageName.replace('.', '_')}"
+        for ((index, targetSuperType) in targetSuperTypes.withIndex()) {
+            val supertypeClassName = classNames[index]
+            val supertypeTypeName = targetSuperType.toTypeName()
+            val functionName = if (supertypeClassName.simpleName in duplicateSimpleNames) {
+                "bindTo${supertypeClassName.simpleName}_${supertypeClassName.packageName.replace('.', '_')}"
             } else {
-                "bindTo${interfaceClassName.simpleName}"
+                "bindTo${supertypeClassName.simpleName}"
             }
-            block(TargetInterface(functionName, interfaceTypeName))
+            block(TargetSuperType(functionName, supertypeTypeName))
         }
     }
 
-    protected fun ModuleInfo.logNoImplementedInterfaces(annotatedClass: KSClassDeclaration) {
-        logError("must implement at least one interface", annotatedClass)
+    protected fun ModuleInfo.logNoImplementedSuperTypes(annotatedClass: KSClassDeclaration) {
+        logError("must implement at least one interface or extend a super-class", annotatedClass)
     }
 
-    class TargetInterface(
+    class TargetSuperType(
         val functionName: String,
-        val interfaceTypeName: TypeName,
+        val supertypeTypeName: TypeName,
     )
 }

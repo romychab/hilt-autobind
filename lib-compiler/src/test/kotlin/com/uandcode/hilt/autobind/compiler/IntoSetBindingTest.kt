@@ -137,7 +137,7 @@ class IntoSetBindingTest {
 
         val result = compile(source)
         result.assertCompilationError()
-        assertTrue(result.messages.contains("must implement at least one interface"))
+        assertTrue(result.messages.contains("must implement at least one interface or extend a super-class"))
     }
 
     @Test
@@ -174,6 +174,123 @@ class IntoSetBindingTest {
               @Binds
               @IntoSet
               public fun bindToInterceptor(`impl`: ScopedInterceptor): Interceptor
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `binds direct parent classes`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+            import javax.inject.Inject
+
+            open class ParentClass
+
+            @AutoBindsIntoSet
+            class ChildClass @Inject constructor() : ParentClass()
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClass__IntoSetModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClass__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `binds mixed direct parent class and interfaces`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+            import javax.inject.Inject
+
+            open class ParentClass
+            interface Interface
+
+            @AutoBindsIntoSet
+            class ChildClass @Inject constructor() : ParentClass(), Interface
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClass__IntoSetModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClass__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
+              
+              @Binds
+              @IntoSet
+              public fun bindToInterface(`impl`: ChildClass): Interface
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `no bindings for grand-parents`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+            import javax.inject.Inject
+
+            open class GrandParentClass
+            open class ParentClass : GrandParentClass()
+
+            @AutoBindsIntoSet
+            class ChildClass @Inject constructor() : ParentClass()
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("ChildClass__IntoSetModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.IntoSet
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface ChildClass__IntoSetModule {
+              @Binds
+              @IntoSet
+              public fun bindToParentClass(`impl`: ChildClass): ParentClass
             }
         """.trimIndent())
     }
