@@ -3,7 +3,6 @@
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Add KSP plugin](#add-ksp-plugin)
 - [Add Hilt AutoBind dependencies](#add-hilt-autobind-dependencies)
 - [Version compatibility](#version-compatibility)
 
@@ -13,30 +12,56 @@ Hilt AutoBind requires [Hilt](https://dagger.dev/hilt/) and
 [KSP](https://github.com/google/ksp) to be set up in your project. If you
 haven't configured them yet, follow the steps below.
 
-### Hilt
-
-Follow the [official Hilt setup guide](https://dagger.dev/hilt/gradle-setup)
-to add the Hilt Gradle plugin and dependencies to your project.
-
-### KSP
-
-Follow the [KSP quickstart](https://github.com/google/ksp#quickstart) to add
-the KSP Gradle plugin.
-
-## Add KSP Plugin
-
-Make sure the KSP plugin is applied in your module's `build.gradle.kts`:
+**1. Add the Hilt and KSP Gradle plugins to your root `build.gradle.kts`:**
 
 ```kotlin
 plugins {
-    id("com.google.devtools.ksp") version "<ksp-version>"
-    // ... other plugins (e.g., kotlin, hilt)
+    id("com.google.dagger.hilt.android") version "2.59.2" apply false
+    id("com.google.devtools.ksp") version "2.3.5" apply false
 }
 ```
 
+**2. Apply the plugins in your app module's `build.gradle.kts`:**
+
+```kotlin
+plugins {
+    id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
+}
+```
+
+**3. Add the Hilt dependency and KSP compiler in the same module:**
+
+```kotlin
+dependencies {
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+}
+```
+
+**4. Annotate your `Application` class with `@HiltAndroidApp`:**
+
+```kotlin
+@HiltAndroidApp
+class MyApplication : Application()
+```
+
+**5. Register it in `AndroidManifest.xml`:**
+
+```xml
+<application
+    android:name=".MyApplication"
+    ...>
+</application>
+```
+
+For the full reference, see the:
+1. [Official Hilt setup guide](https://dagger.dev/hilt/gradle-setup).
+2. [KSP quickstart guide](https://github.com/google/ksp#quickstart).
+
 ## Add Hilt AutoBind Dependencies
 
-Add the runtime library and the KSP compiler to your module's `build.gradle.kts`:
+Add the library and the KSP compiler to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {

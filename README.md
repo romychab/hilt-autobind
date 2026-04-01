@@ -74,6 +74,22 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
 | [Multi-Module Projects](docs/multi-module.md)        | -                               | Per-module setup in multi-module projects                                           |
 
+## Comparison with Similar Libraries
+
+| Feature                               | **Hilt AutoBind**                                                    | [hilt-binder](https://github.com/mars885/hilt-binder) | [android-hilt](https://github.com/sczerwinski/android-hilt) |
+|---------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------------|
+| **Basic `@Binds` generation**         | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Scope / component auto-detection**  | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Qualifiers**                        | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Multi-module projects**             | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Set multibinding**                  | ✅                                                                    | ✅                                                     | ❌                                                           |
+| **Map multibinding**                  | ✅                                                                    | ✅                                                     | ❌                                                           |
+| **Bind to multiple types**            | ✅                                                                    | ✅                                                     | ❌                                                           |
+| **Bindings by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Bindings by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ✅                                                           |
+| **Annotation aliases**                | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Custom Hilt components**            | ❌ ([Issue #18](https://github.com/romychab/hilt-autobind/issues/18)) | ✅                                                     | ✅                                                           |
+
 ## Requirements
 
 | Dependency            | Minimum version |
