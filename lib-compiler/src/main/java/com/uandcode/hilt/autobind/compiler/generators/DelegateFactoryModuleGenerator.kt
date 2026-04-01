@@ -22,8 +22,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
-import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.factories.AutoScoped
 import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import dagger.Provides
@@ -52,7 +52,7 @@ internal class DelegateFactoryModuleGenerator(
         // Check if provideDelegate() is annotated with @AutoScoped
         val provideDelegateMethod = factoryDeclaration.getAllFunctions()
             .firstOrNull {
-                it.simpleName.asString() == PROVIDE_DELEGATE_METHOD && it.modifiers.contains(Modifier.OVERRIDE)
+                it.simpleName.asString() == PROVIDE_DELEGATE_METHOD
             }
         val isAutoScoped = provideDelegateMethod
             ?.isAnnotationPresent(AutoScoped::class) == true ||
@@ -77,7 +77,7 @@ internal class DelegateFactoryModuleGenerator(
         }
 
         val builder = TypeSpec.objectBuilder(moduleClassName)
-            .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
+            .preBuildHiltModuleTypeSpec(hiltComponentClassName)
 
         // @Provides for the main delegate via provideDelegate()
         builder.addFunction(
@@ -88,7 +88,7 @@ internal class DelegateFactoryModuleGenerator(
                 }
                 .applyQualifier(moduleInfo)
                 .addParameter("factory", factoryClassName)
-                .addCode("return factory.provideDelegate()")
+                .addCode("return factory.$PROVIDE_DELEGATE_METHOD()")
                 .returns(originClassName)
                 .build()
         )
@@ -131,29 +131,29 @@ internal class DelegateFactoryModuleGenerator(
         val factoryName = factoryDeclaration.simpleName.asString()
 
         if (factoryDeclaration.typeParameters.isNotEmpty()) {
-            logFactoryTypeParamsError(factoryName, factoryDeclaration)
+            throw logFactoryTypeParamsException(factoryName, factoryDeclaration)
         }
 
         if (annotatedClass.typeParameters.isNotEmpty()) {
-            commonKspFail("should not have type parameters", annotatedClass)
+            throw commonKspException("should not have type parameters", annotatedClass)
         }
 
         if (factoryDeclaration.classKind != ClassKind.CLASS) {
-            kspFail(
+            throw AutoBindException(
                 "DelegateBindingFactory subclass '$factoryName' must be a class (not an object, interface, or enum)",
                 factoryDeclaration
             )
         }
 
         if (factoryDeclaration.isAbstract()) {
-            kspFail(
+            throw AutoBindException(
                 "DelegateBindingFactory subclass '$factoryName' must not be abstract",
                 factoryDeclaration,
             )
         }
 
         if (Modifier.OPEN in factoryDeclaration.modifiers) {
-            kspFail(
+            throw AutoBindException(
                 "DelegateBindingFactory subclass '$factoryName' must be a final class",
                 factoryDeclaration,
             )
@@ -163,22 +163,23 @@ internal class DelegateFactoryModuleGenerator(
             .primaryConstructor
             ?.isAnnotationPresent(Inject::class)
         if (hasInjectAnnotation != true) {
-            logNoInjectAnnotationError(factoryName, factoryDeclaration)
+            throw noInjectAnnotationException(factoryName, factoryDeclaration)
         }
 
         val provideDelegateFun = findProvideDelegateFunction(factoryDeclaration)
-            ?: kspFail(
+            ?: throw AutoBindException(
             "provideDelegate() function has not been found. " +
                     "Make sure you override it.", factoryDeclaration
             )
 
         if (provideDelegateFun.returnType?.resolve() != annotatedClass.asStarProjectedType()) {
-            kspFail("The provideDelegate() function must return '${annotatedClass.qualifiedName?.asString()}' " +
-                    "type, since the factory is used in @AutoBinds annotation for that type.", factoryDeclaration)
+            throw AutoBindException("The provideDelegate() function must return " +
+                    "'${annotatedClass.qualifiedName?.asString()}' type, since the " +
+                    "factory is used in @AutoBinds annotation for that type.", factoryDeclaration)
         }
 
         if (findDelegateBindingFactoryType(factoryDeclaration) == null) {
-            kspFail(
+            throw AutoBindException(
                 "DelegateBindingFactory subclass '$factoryName' must directly implement DelegateBindingFactory",
                 factoryDeclaration,
             )
@@ -189,25 +190,21 @@ internal class DelegateFactoryModuleGenerator(
         factoryDeclaration: KSClassDeclaration,
     ) = factoryDeclaration.getDeclaredFunctions()
         .firstOrNull {
-            it.simpleName.asString() == "provideDelegate" &&
-                    it.parameters.isEmpty() &&
-                    it.modifiers.contains(Modifier.OVERRIDE)
+            it.simpleName.asString() == PROVIDE_DELEGATE_METHOD && it.parameters.isEmpty()
         }
 
-    private fun logFactoryTypeParamsError(
+    private fun logFactoryTypeParamsException(
         factoryName: String,
         factoryDeclaration: KSClassDeclaration,
-    ): Nothing {
-        kspFail(
-            "DelegateBindingFactory subclass '$factoryName' must not have type parameters. " +
-                    "Specify the concrete type on the parent interface instead " +
-                    "(e.g., DelegateBindingFactory<AppDatabase>)",
-            factoryDeclaration,
-        )
-    }
+    ) = AutoBindException(
+        "DelegateBindingFactory subclass '$factoryName' must not have type parameters. " +
+                "Specify the concrete type on the parent interface instead " +
+                "(e.g., DelegateBindingFactory<AppDatabase>)",
+        factoryDeclaration,
+    )
 
-    private fun logNoInjectAnnotationError(factoryName: String, factoryDeclaration: KSClassDeclaration): Nothing {
-        kspFail(
+    private fun noInjectAnnotationException(factoryName: String, factoryDeclaration: KSClassDeclaration): Exception {
+        return AutoBindException(
             "DelegateBindingFactory subclass '$factoryName' must have a primary constructor " +
                     "with @Inject annotation",
             factoryDeclaration,

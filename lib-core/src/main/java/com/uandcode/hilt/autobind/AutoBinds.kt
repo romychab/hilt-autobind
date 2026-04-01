@@ -33,11 +33,11 @@ import kotlin.reflect.KClass
  * Generates a `@Provides` module for the class itself and for each public
  * zero-argument non-Unit-returning method declared on it.
  *
- * @param installIn the Hilt component to install the generated module in.
+ * @property installIn the Hilt component to install the generated module in.
  *   Defaults to [HiltComponent.Unspecified], which auto-detects the component from
  *   the scope annotation on the class (falls back to [HiltComponent.Singleton] if unscoped).
- * @param factory optional [BindingFactory] to use for creating instances.
- * @param bindTo explicit list of supertypes to bind to. When non-empty, only the listed
+ * @property factory optional [BindingFactory] to use for creating instances.
+ * @property bindTo explicit list of supertypes to bind to. When non-empty, only the listed
  *   types are used as binding targets instead of all direct supertypes. Each type must be
  *   a transitive supertype of the annotated class; a compile-time error is emitted otherwise.
  *   Supports grandparent classes and interfaces that are not direct supertypes.

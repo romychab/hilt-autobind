@@ -9,9 +9,9 @@ package com.uandcode.hilt.autobind
  * from the scope annotation on the class. If the class has no scope annotation,
  * [SingletonComponent][Singleton] is used as the fallback.
  *
- * @param componentClass fully qualified class name of the Hilt component,
+ * @property componentClass fully qualified class name of the Hilt component,
  *   or empty string for [Unspecified].
- * @param scopeClass fully qualified class name of the corresponding scope annotation,
+ * @property scopeClass fully qualified class name of the corresponding scope annotation,
  *   or empty string for [Unspecified].
  */
 public enum class HiltComponent(

@@ -17,7 +17,7 @@ When many classes share the same `@AutoBinds(factory = ...)` or `installIn`
 configuration, you can define a custom annotation that carries those parameters
 as defaults. Applying that annotation then has the same effect as applying
 `@AutoBinds` with the same arguments. The same alias mechanism is also supported
-for `@AutoBindsIntoSet`.
+for `@AutoBindsIntoSet` and `@AutoBindsIntoMap`.
 
 This is useful for reducing boilerplate when binding many classes through a
 shared factory (e.g., Retrofit interfaces):
@@ -243,6 +243,8 @@ just as if each class had `@AutoBinds` applied directly.
 
 ## Multibinding in aliases
 
+### Set multibinding
+
 `@AutoBindsIntoSet` supports the same alias mechanism as `@AutoBinds`. Annotate
 an annotation class with `@AutoBindsIntoSet` and every class annotated with that
 alias is contributed to the multibinding `Set` automatically:
@@ -283,9 +285,66 @@ annotation class ContributeActivityScopedHandler
 annotation class ContributeInterceptor
 ```
 
+### Map multibinding
+
+`@AutoBindsIntoMap` supports the same alias mechanism. You can bake a map key
+annotation directly into the alias, or leave the key for each class to provide
+on its own:
+
+**Alias with a baked-in key** - every class using the alias contributes under
+the same key:
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoMap
+@StringKey("plugin")
+annotation class ContributePlugin
+
+@ContributePlugin
+class MyPlugin @Inject constructor() : Plugin
+// --> @StringKey("plugin") is forwarded automatically
+```
+
+**Alias without a key** - each class provides its own key annotation:
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@AutoBindsIntoMap
+annotation class ContributeToMap
+
+@ContributeToMap
+@IntKey(42)
+class MyHandler @Inject constructor() : Handler
+```
+
+**Alias without a key, class without a key** - the `@ClassKey` fallback is
+applied automatically:
+
+```kotlin
+@ContributeToMap
+class MyHandler @Inject constructor() : Handler
+// --> @ClassKey(MyHandler::class) is applied automatically
+```
+
+**Key conflict** - if the alias carries a key and the annotated class also
+carries a *different* key, the processor emits a compile-time error:
+
+```kotlin
+@ContributePlugin           // has @StringKey("plugin")
+@IntKey(1)                  // different key type → COMPILE ERROR
+class MyPlugin @Inject constructor() : Plugin
+```
+
+If both the alias and the class carry the same key annotation with the same
+value, it is treated as a single key (no conflict).
+
+The generated files are named with the `__IntoMapModule` suffix, just as for
+direct `@AutoBindsIntoMap` usage. All parameters — `installIn`, `bindTo`, and
+scope annotations — are forwarded the same way as with `@AutoBinds` aliases.
+
 ## Requirements for Alias Annotations
 
-An annotation used as an `@AutoBinds` or `@AutoBindsIntoSet` alias must:
+An annotation used as an `@AutoBinds`, `@AutoBindsIntoSet`, or `@AutoBindsIntoMap` alias must:
 
 - Be an **annotation class** (declared with the `annotation class` keyword).
 - Declare **`@Target(AnnotationTarget.CLASS)`** so it can be applied to classes and interfaces.

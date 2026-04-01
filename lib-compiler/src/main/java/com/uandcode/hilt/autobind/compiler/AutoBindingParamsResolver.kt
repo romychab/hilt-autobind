@@ -7,7 +7,6 @@ import com.uandcode.hilt.autobind.HiltComponent
 import com.uandcode.hilt.autobind.compiler.resolver.base.cast
 import com.uandcode.hilt.autobind.compiler.resolver.base.takeIfNoConflicts
 
-
 internal class AutoBindingParamsResolver {
 
     fun resolve(
@@ -29,7 +28,7 @@ internal class AutoBindingParamsResolver {
             findQualifierAnnotation(annotationSource),
             onConflict = { conflictingQualifiers ->
                 val conflictingNames = conflictingQualifiers.mapNotNull { it.qualifiedName }
-                failNotMatchingQualifiers(annotatedClass, conflictingNames, annotationName)
+                throw failNotMatchingQualifiers(annotatedClass, conflictingNames, annotationName)
             }
         )
 
@@ -56,7 +55,7 @@ internal class AutoBindingParamsResolver {
             aliasHiltComponent,
             onConflict = { conflictingComponents ->
                 val conflictingScopes = conflictingComponents.map { it.scopeClass }
-                failNonMatchingScopes(annotatedClass, conflictingScopes, annotationName)
+                throw failNonMatchingScopes(annotatedClass, conflictingScopes, annotationName)
             }
         ) ?: HiltComponent.Singleton
 
@@ -70,23 +69,16 @@ internal class AutoBindingParamsResolver {
         annotatedClass: KSClassDeclaration,
         conflictingScopes: List<String>,
         annotationName: String,
-    ): Nothing {
-        kspFail("@$annotationName: class has conflicting scopes: $conflictingScopes. " +
-                "Make sure you align installIn=... param with Scope annotation.", annotatedClass)
-    }
+    ) = AutoBindException("@$annotationName: class has conflicting scopes: $conflictingScopes. " +
+            "Make sure you align installIn=... param with Scope annotation.", annotatedClass)
 
     private fun failNotMatchingQualifiers(
         annotatedClass: KSClassDeclaration,
         qualifiers: List<String>,
         annotationName: String,
-    ): Nothing {
-        kspFail("@$annotationName: class has conflicting qualifiers: $qualifiers.", annotatedClass)
-    }
+    ) = AutoBindException("@$annotationName: class has conflicting qualifiers: $qualifiers.",
+            annotatedClass)
 
-    /**
-     * Finds the fully qualified scope annotation on the class, if any.
-     * Checks against all known [HiltComponent] scope classes.
-     */
     private fun findScopeAnnotation(
         annotationName: String,
         annotatedClass: KSClassDeclaration,
@@ -96,7 +88,7 @@ internal class AutoBindingParamsResolver {
             ?.let { scopeQualifiedName ->
                 HiltComponent.entries.firstOrNull {
                     it.scopeClass == scopeQualifiedName
-                } ?: kspFail(
+                } ?: throw AutoBindException(
                     "@$annotationName: unable to resolve Hilt component for scope " +
                             "'${scopeQualifiedName.substringAfterLast('.')}' on class " +
                             "'${annotatedClass.simpleName.asString()}'",
@@ -125,7 +117,7 @@ internal class AutoBindingParamsResolver {
 
     private class ResolvedAnnotation(
         val annotation: KSAnnotation,
-        val declaration: KSClassDeclaration,
+        declaration: KSClassDeclaration,
     ) {
         val qualifiedName = declaration.qualifiedName?.asString()
 
@@ -141,7 +133,7 @@ internal class AutoBindingParamsResolver {
         }
     }
 
-    private class ResolvedHiltComponent(
+    private data class ResolvedHiltComponent(
         val scopeClassName: ClassName,
         val componentClassName: ClassName,
         val isScopedBindingRequired: Boolean,

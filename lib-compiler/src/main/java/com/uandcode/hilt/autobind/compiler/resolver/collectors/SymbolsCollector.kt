@@ -8,8 +8,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.validate
 import com.uandcode.hilt.autobind.AutoBinds
+import com.uandcode.hilt.autobind.AutoBindsIntoMap
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
-import com.uandcode.hilt.autobind.compiler.kspFail
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 import kotlin.reflect.KClass
 
 fun Sequence<KSClassDeclaration>.collectSymbols(
@@ -31,7 +32,7 @@ fun Sequence<KSClassDeclaration>.failOnConflictingAnnotations(): Sequence<KSClas
         val existingAnnotations = mutableSetOf<KClass<*>>()
         SingletonAnnotations.forEach { kClass ->
             if (declaration.isAnnotationPresent(kClass) && !existingAnnotations.add(kClass)) {
-                kspFail("Annotation '@${kClass.simpleName}' is applied multiple times.", declaration)
+                throw AutoBindException("Annotation '@${kClass.simpleName}' is applied multiple times.", declaration)
             }
             // search aliases
             declaration.annotations
@@ -39,7 +40,7 @@ fun Sequence<KSClassDeclaration>.failOnConflictingAnnotations(): Sequence<KSClas
                 .filterIsInstance<KSClassDeclaration>()
                 .forEach {
                     if (it.isAnnotationPresent(kClass) && !existingAnnotations.add(kClass)) {
-                        kspFail("Annotation '@${kClass.simpleName}' is applied multiple times. " +
+                        throw AutoBindException("Annotation '@${kClass.simpleName}' is applied multiple times. " +
                                 "Review all aliases and exclude duplicated annotations", declaration)
                     }
                 }
@@ -50,4 +51,5 @@ fun Sequence<KSClassDeclaration>.failOnConflictingAnnotations(): Sequence<KSClas
 private val SingletonAnnotations = setOf(
     AutoBinds::class,
     AutoBindsIntoSet::class,
+    AutoBindsIntoMap::class,
 )

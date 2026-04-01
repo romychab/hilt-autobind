@@ -6,6 +6,8 @@
 - [Using @Named](#using-named-qualifier)
 - [Custom qualifier annotations](#custom-qualifier-annotations)
 - [Qualifiers with Multibinding](#qualifiers-with-multibinding)
+  - [Set multibinding](#set-multibinding)
+  - [Map multibinding](#map-multibinding)
 - [Qualifiers with factory bindings](#qualifiers-with-factory-bindings)
 - [Qualifiers on annotation aliases](#qualifiers-on-annotation-aliases)
 - [Qualifiers combined with scopes](#qualifiers-combined-with-scopes)
@@ -115,6 +117,8 @@ class MyViewModel @Inject constructor(
 
 ## Qualifiers with Multibinding
 
+### Set multibinding
+
 Qualifiers work with `@AutoBindsIntoSet` in the same way:
 
 ```kotlin
@@ -149,6 +153,44 @@ Injection site:
 ```kotlin
 class OkHttpClientFactory @Inject constructor(
     @DebugInterceptors private val interceptors: Set<Interceptor>,
+)
+```
+
+### Map multibinding
+
+Qualifiers work with `@AutoBindsIntoMap` the same way. The qualifier is placed
+on the `@Binds @IntoMap` function alongside the map key annotation:
+
+```kotlin
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+annotation class DebugHandlers
+
+@DebugHandlers
+@AutoBindsIntoMap
+@StringKey("logging")
+class LoggingHandler @Inject constructor() : Handler
+```
+
+Generated:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface LoggingHandler__IntoMapModule {
+    @Binds
+    @IntoMap
+    @StringKey("logging")
+    @DebugHandlers
+    fun bindToHandler(impl: LoggingHandler): Handler
+}
+```
+
+Injection site:
+
+```kotlin
+class HandlerRegistry @Inject constructor(
+    @DebugHandlers private val handlers: Map<String, @JvmSuppressWildcards Handler>,
 )
 ```
 

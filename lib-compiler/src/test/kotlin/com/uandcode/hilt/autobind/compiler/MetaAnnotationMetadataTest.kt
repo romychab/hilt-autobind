@@ -310,4 +310,41 @@ class MetaAnnotationMetadataTest {
         """.trimIndent())
     }
 
+    @Test
+    fun `@AutoBindsIntoMap annotation alias from other module must be processed`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.metadata.MultiModuleBindIntoMapActivity
+            import javax.inject.Inject
+
+            interface Interceptor
+
+            @MultiModuleBindIntoMapActivity
+            class LoggingInterceptor @Inject constructor() : Interceptor
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        val generated = result.assertHasGeneratedFile("LoggingInterceptor__IntoMapModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.android.components.ActivityComponent
+            import dagger.multibindings.IntoMap
+            import dagger.multibindings.StringKey
+
+            @Module
+            @InstallIn(ActivityComponent::class)
+            internal interface LoggingInterceptor__IntoMapModule {
+              @Binds
+              @IntoMap
+              @StringKey(`value` = "debug")
+              public fun bindToInterceptor(`impl`: LoggingInterceptor): Interceptor
+            }
+        """.trimIndent())
+    }
 }

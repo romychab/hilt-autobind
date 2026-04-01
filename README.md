@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.5.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.5.0")
+    implementation("com.uandcode:hilt-autobind:0.6.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.6.0")
 }
 ```
 
@@ -68,7 +68,8 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | [Scopes & components](docs/scopes-and-components.md) | `installIn`                     | Auto-detects or explicitly sets the Hilt component                                  |
 | [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)`     | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
 | [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
-| [Multibinding](docs/multibinding.md)                 | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
+| [Set multibinding](docs/multibinding.md)             | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
+| [Map multibinding](docs/multibinding-map.md)         | `@AutoBindsIntoMap`             | Contributes to a Dagger `Map` multibinding with a `@MapKey`-annotated key           |
 | [Qualifiers](docs/qualifiers.md)                     | `@Named` / custom `@Qualifier`  | Distinguishes multiple bindings of the same type with JSR-330 qualifier annotations |
 | [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
 | [Multi-Module Projects](docs/multi-module.md)        | -                               | Per-module setup in multi-module projects                                           |

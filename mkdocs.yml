@@ -17,7 +17,8 @@ nav:
   - Scopes & Components: scopes-and-components.md
   - Class Factory: class-factory.md
   - Delegate Factory: delegate-factory.md
-  - Multibinding: multibinding.md
+  - Set Multibinding: multibinding.md
+  - Map Multibinding: multibinding-map.md
   - Qualifiers: qualifiers.md
   - Annotation Aliases: annotation-aliases.md
   - Multi-Module Projects: multi-module.md

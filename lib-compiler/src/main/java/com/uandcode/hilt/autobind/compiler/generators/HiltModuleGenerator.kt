@@ -19,6 +19,7 @@ internal class HiltModuleGenerator(
     private val classFactoryModuleGenerator = ClassFactoryModuleGenerator(logger)
     private val delegateFactoryModuleGenerator = DelegateFactoryModuleGenerator(logger)
     private val intoSetModuleGenerator = IntoSetModuleGenerator(logger)
+    private val intoMapModuleGenerator = IntoMapModuleGenerator(logger)
 
     fun generateHiltModule(
         type: ModuleType,
@@ -27,6 +28,7 @@ internal class HiltModuleGenerator(
         val typeSpec = when (type) {
             is ModuleType.Default -> defaultModuleGenerator.generate(moduleInfo)
             is ModuleType.IntoSet -> intoSetModuleGenerator.generate(moduleInfo)
+            is ModuleType.IntoMap -> intoMapModuleGenerator.generate(moduleInfo, type.mapKeyAnnotationSpec)
             is ModuleType.ClassFactory -> classFactoryModuleGenerator.generate(
                 moduleInfo = moduleInfo,
                 factoryDeclaration = type.factoryDeclaration,
