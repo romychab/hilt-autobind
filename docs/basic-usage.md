@@ -13,8 +13,8 @@
 
 ## Single Interface Binding
 
-Annotate a concrete class that implements an interface with `@AutoBinds`, and the
-processor generates a Hilt `@Binds` module automatically.
+Annotate a concrete class that implements an interface or extends a base class with `@AutoBinds`, 
+and the processor generates a Hilt `@Binds` module automatically.
 
 ```kotlin
 interface UserRepository {
@@ -44,7 +44,7 @@ internal interface UserRepositoryImplModule {
 }
 ```
 
-As a result, you don't need to implement Hilt binding modules manually, and Hilt can now
+As a result, you don't need to write Hilt binding modules manually, and Hilt can now
 inject `UserRepository` anywhere.
 
 ## Multiple Interfaces

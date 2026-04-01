@@ -1,6 +1,6 @@
 # Hilt AutoBind
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.uandcode/hilt-autobind.svg?label=Maven%20Central)](https://central.sonatype.com/search?q=g:com.uandcode+a:hilt-autobind-*)
+[![Maven Central](https://img.shields.io/maven-central/v/com.uandcode/hilt-autobind.svg?label=Maven%20Central&color=dark-green)](https://central.sonatype.com/search?q=g:com.uandcode+a:hilt-autobind-*)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![PR Check](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml/badge.svg)](https://github.com/romychab/hilt-autobind/actions/workflows/pr-check.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/romychab/0934de7a7449df001be47fa0c6286b33/raw/hilt-autobind-coverage.json)](https://github.com/romychab/hilt-autobind/actions/workflows/publish.yml)
@@ -27,7 +27,7 @@ dependencies {
 ```
 
 > Requires [Hilt](https://dagger.dev/hilt/) and [KSP](https://github.com/google/ksp).
-> See [Installation](docs/installation.md) for full setup instructions.
+> See [Installation](https://docs.uandcode.com/hilt-autobind/installation/) for full setup instructions.
 
 Annotate your implementation class:
 
@@ -76,19 +76,19 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 
 ## Comparison with Similar Libraries
 
-| Feature                               | **Hilt AutoBind**                                                    | [hilt-binder](https://github.com/mars885/hilt-binder) | [android-hilt](https://github.com/sczerwinski/android-hilt) |
-|---------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------------|
-| **Basic `@Binds` generation**         | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Scope / component auto-detection**  | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Qualifiers**                        | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Multi-module projects**             | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Set multibinding**                  | ✅                                                                    | ✅                                                     | ❌                                                           |
-| **Map multibinding**                  | ✅                                                                    | ✅                                                     | ❌                                                           |
-| **Bind to multiple types**            | ✅                                                                    | ✅                                                     | ❌                                                           |
-| **Bindings by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Bindings by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ✅                                                           |
-| **Annotation aliases**                | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Custom Hilt components**            | ❌ ([Issue #18](https://github.com/romychab/hilt-autobind/issues/18)) | ✅                                                     | ✅                                                           |
+| Feature                              | **Hilt AutoBind**                                                    | [hilt-binder](https://github.com/mars885/hilt-binder) | [android-hilt](https://github.com/sczerwinski/android-hilt) |
+|--------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------------|
+| **Basic `@Binds` generation**        | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Scope / component auto-detection** | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Qualifiers**                       | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Supertype selection**              | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Multibinding**                     | ✅                                                                    | ✅                                                     | ❌                                                           |
+| **Auto-binding to multiple types**   | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Combine basic-/multi- binding**    | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Binding by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Binding by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ⚠️ (`@FactoryMethod`)                                       |
+| **Annotation aliases**               | ✅                                                                    | ❌                                                     | ❌                                                           |
+| **Custom Hilt components**           | ❌ ([Issue #18](https://github.com/romychab/hilt-autobind/issues/18)) | ✅                                                     | ✅                                                           |
 
 ## Requirements
 
