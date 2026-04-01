@@ -3,7 +3,7 @@ package com.uandcode.hilt.autobind.compiler.resolver.collectors
 import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
-import com.uandcode.hilt.autobind.compiler.kspFail
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 
 internal class BindingTypesCollector {
 
@@ -32,10 +32,6 @@ internal class BindingTypesCollector {
             }
     }
 
-    /**
-     * Validates that every type in [bindTargets] is a transitive supertype of [annotatedClass].
-     * Emits a compile-time error for each invalid type.
-     */
     private fun validateBindTargets(
         annotatedClass: KSClassDeclaration,
         bindTargets: List<KSType>,
@@ -48,7 +44,7 @@ internal class BindingTypesCollector {
         for (target in bindTargets) {
             val qualifiedName = target.declaration.qualifiedName?.asString()
             if (qualifiedName == null || qualifiedName !in allSuperTypeNames) {
-                kspFail(
+                throw AutoBindException(
                     "@$annotationName(bindTo=...): '${target.declaration.simpleName.asString()}' " +
                             "is not a supertype of '${annotatedClass.simpleName.asString()}'.",
                     annotatedClass,

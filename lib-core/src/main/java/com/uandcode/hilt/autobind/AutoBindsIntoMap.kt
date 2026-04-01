@@ -4,28 +4,33 @@ import kotlin.reflect.KClass
 
 /**
  * Generates a Dagger Hilt module that contributes the annotated class into a
- * multibinding `Set` of each directly implemented interface.
+ * multibinding `Map` of each directly implemented interface.
  *
  * The annotated class must be a concrete, non-abstract class with a primary
  * constructor annotated with `@Inject`, and must implement at least one interface.
  *
+ * A map key annotation (meta-annotated with `@dagger.MapKey`) must be placed on
+ * the annotated class or its alias. If no key is provided, `@ClassKey` using the
+ * annotated class is used as a fallback.
+ *
  * Example:
  * ```
- * @AutoBindsIntoSet
+ * @AutoBindsIntoMap
+ * @StringKey("logging")
  * class LoggingInterceptor @Inject constructor() : Interceptor
  * ```
  * Generates:
  * ```
  * @Module
  * @InstallIn(SingletonComponent::class)
- * internal interface LoggingInterceptor__IntoSetModule {
- *     @Binds @IntoSet
+ * internal interface LoggingInterceptor__IntoMapModule {
+ *     @Binds @IntoMap @StringKey("logging")
  *     fun bindToInterceptor(impl: LoggingInterceptor): Interceptor
  * }
  * ```
  *
- * Can be combined with [AutoBinds] on the same class to produce both a direct
- * binding and a set contribution.
+ * Can be combined with [AutoBinds] and [AutoBindsIntoSet] on the same class to produce
+ * a direct binding, a set contribution, and a map contribution simultaneously.
  *
  * @property installIn the Hilt component to install the generated module in.
  *   Defaults to [HiltComponent.Unspecified], which auto-detects the component from
@@ -36,7 +41,7 @@ import kotlin.reflect.KClass
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
-public annotation class AutoBindsIntoSet(
+public annotation class AutoBindsIntoMap(
     val installIn: HiltComponent = HiltComponent.Unspecified,
     val bindTo: Array<KClass<*>> = [],
 )

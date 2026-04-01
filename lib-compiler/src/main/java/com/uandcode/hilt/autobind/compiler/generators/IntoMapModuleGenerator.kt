@@ -5,39 +5,46 @@ package com.uandcode.hilt.autobind.compiler.generators
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import dagger.Binds
+import dagger.multibindings.IntoMap
 
 /**
- * Generates an interface-based Hilt module with `@Binds` functions
- * for each directly implemented interface.
+ * Generates an interface-based Hilt module with `@Binds @IntoMap` functions
+ * for each directly implemented interface, contributing the class to a
+ * multibinding `Map`.
  */
-internal class DefaultModuleGenerator(
+internal class IntoMapModuleGenerator(
     logger: KSPLogger,
-) : AbstractModuleGenerator(logger) {
+) : AbstractModuleGenerator(logger = logger) {
 
-    fun generate(moduleInfo: ModuleInfo): TypeSpec = with(moduleInfo) {
+    fun generate(moduleInfo: ModuleInfo, mapKeyAnnotationSpec: AnnotationSpec): TypeSpec = with(moduleInfo) {
         val targetSuperTypes = validateCommonBindingRules()
-        return TypeSpec.interfaceBuilder(className = moduleClassName)
+        return TypeSpec
+            .interfaceBuilder(className = moduleClassName)
             .preBuildHiltModuleTypeSpec(hiltComponentClassName)
             .apply {
-                addBindFunctions(moduleInfo, originClassName, targetSuperTypes)
+                addBindIntoMapFunctions(moduleInfo, originClassName, targetSuperTypes, mapKeyAnnotationSpec)
             }
             .build()
     }
 
-    private fun TypeSpec.Builder.addBindFunctions(
+    private fun TypeSpec.Builder.addBindIntoMapFunctions(
         moduleInfo: ModuleInfo,
         originClassName: ClassName,
         targetSuperTypes: List<KSType>,
+        mapKeyAnnotationSpec: AnnotationSpec,
     ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
         val funSpec = FunSpec.builder(it.functionName)
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
+            .addAnnotation(IntoMap::class)
+            .addAnnotation(mapKeyAnnotationSpec)
             .apply {
                 if (moduleInfo.isScopedBindingRequired) {
                     addAnnotation(moduleInfo.scopeClassName)

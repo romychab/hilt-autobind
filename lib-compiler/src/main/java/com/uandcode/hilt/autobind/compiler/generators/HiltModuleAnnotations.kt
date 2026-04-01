@@ -10,7 +10,7 @@ import dagger.hilt.InstallIn
 /**
  * Applies `@Module`, `@InstallIn` and `internal` modifier to a [TypeSpec.Builder].
  */
-internal fun TypeSpec.Builder.applyHiltModuleAnnotationsAndModifiers(
+internal fun TypeSpec.Builder.preBuildHiltModuleTypeSpec(
     hiltComponentClassName: ClassName,
 ) = apply {
     addAnnotation(Module::class)

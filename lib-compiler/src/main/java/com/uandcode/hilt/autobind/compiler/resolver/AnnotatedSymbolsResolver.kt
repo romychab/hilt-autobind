@@ -9,6 +9,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 import com.uandcode.hilt.autobind.compiler.Const.METADATA_PACKAGE
 import com.uandcode.hilt.autobind.compiler.Const.META_ARG_NAME
 import com.uandcode.hilt.autobind.compiler.Const.META_BINDING_INFO
@@ -16,7 +17,6 @@ import com.uandcode.hilt.autobind.compiler.MetadataInfo
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.MetadataGenerator
 import com.uandcode.hilt.autobind.compiler.generators.targetsClass
-import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.compiler.resolver.base.AutoResolver
 import com.uandcode.hilt.autobind.compiler.resolver.collectors.collectSymbols
 import com.uandcode.hilt.autobind.compiler.resolver.collectors.failOnConflictingAnnotations
@@ -28,10 +28,12 @@ internal class AnnotatedSymbolsResolver(
 
     val autoBindsResolver = AutoBindsResolver(hiltModuleGenerator)
     val autoBindsIntoSetResolver = AutoBindsIntoSetResolver(hiltModuleGenerator)
+    val autoBindsIntoMapResolver = AutoBindsIntoMapResolver(hiltModuleGenerator)
 
     val allResolvers = setOf(
         autoBindsResolver,
-        autoBindsIntoSetResolver
+        autoBindsIntoSetResolver,
+        autoBindsIntoMapResolver,
     )
 
     fun processAnnotatedSymbols(resolver: Resolver): List<KSAnnotated> {
@@ -39,7 +41,7 @@ internal class AnnotatedSymbolsResolver(
         allResolvers.forEach { autoResolver ->
             deferred += resolve(resolver, autoResolver)
         }
-        deferred += resolveMultiModuleMetaAnnotations(resolver)
+        deferred += findMultiModuleMetaAnnotations(resolver)
         return deferred
     }
 
@@ -67,7 +69,7 @@ internal class AnnotatedSymbolsResolver(
             }
         }
 
-    private fun resolveMultiModuleMetaAnnotations(
+    private fun findMultiModuleMetaAnnotations(
         resolver: Resolver,
     ): List<KSAnnotated> {
         return resolver.getDeclarationsFromPackage(METADATA_PACKAGE)
@@ -82,13 +84,16 @@ internal class AnnotatedSymbolsResolver(
             .flatMap { aliasQualifiedName ->
                 val aliasAnnotation = resolver
                     .getClassDeclarationByName(aliasQualifiedName)
-                    ?: return@flatMap emptyList()
-                allResolvers.flatMap { autoResolver ->
-                    if (aliasAnnotation.isAnnotationPresent(autoResolver.annotationClass)) {
-                        processAliases(resolver, aliasAnnotation, autoResolver)
-                    } else {
-                        emptyList()
+                if (aliasAnnotation != null) {
+                    allResolvers.flatMap { autoResolver ->
+                        if (aliasAnnotation.isAnnotationPresent(autoResolver.annotationClass)) {
+                            processAliases(resolver, aliasAnnotation, autoResolver)
+                        } else {
+                            emptyList()
+                        }
                     }
+                } else {
+                    emptyList()
                 }
             }
             .toList()
@@ -100,8 +105,8 @@ internal class AnnotatedSymbolsResolver(
         autoResolver: AutoResolver,
     ): List<KSAnnotated> {
         if (!aliasAnnotation.targetsClass()) {
-            kspFail("Alias '@${aliasAnnotation.simpleName.asString()}' must declare " +
-                    "@Target(AnnotationTarget.CLASS) to be applied to classes.",
+            throw AutoBindException("Alias '@${aliasAnnotation.simpleName.asString()}' must " +
+                    "declare @Target(AnnotationTarget.CLASS) to be applied to classes.",
                 aliasAnnotation,
             )
         }

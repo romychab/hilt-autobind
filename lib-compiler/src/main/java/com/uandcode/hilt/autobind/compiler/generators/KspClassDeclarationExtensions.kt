@@ -8,11 +8,15 @@ internal fun KSClassDeclaration.getTargetSuperTypes(): List<KSType> {
     return superTypes
         .map { it.resolve() }
         .filter { type ->
-            val declaration = type.declaration as? KSClassDeclaration ?: return@filter false
-            when (declaration.classKind) {
-                ClassKind.INTERFACE -> true
-                ClassKind.CLASS -> declaration.qualifiedName?.asString() != "kotlin.Any"
-                else -> false
+            val declaration = type.declaration as? KSClassDeclaration
+            if (declaration != null) {
+                when (declaration.classKind) {
+                    ClassKind.INTERFACE -> true
+                    ClassKind.CLASS -> declaration.qualifiedName?.asString() != "kotlin.Any"
+                    else -> false
+                }
+            } else {
+                false
             }
         }
         .toList()

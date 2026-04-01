@@ -6,13 +6,13 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.uandcode.hilt.autobind.AutoBinds
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 import com.uandcode.hilt.autobind.compiler.Const.AUTOBINDS_NAME
 import com.uandcode.hilt.autobind.compiler.AutoBindingParamsResolver
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.compiler.ModuleType
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.findFactoryKType
-import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.compiler.resolver.base.AutoResolver
 import com.uandcode.hilt.autobind.compiler.resolver.collectors.BindingTypesCollector
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
@@ -38,7 +38,7 @@ internal class AutoBindsResolver(
             .getAnnotationsByType(AutoBinds::class)
             .firstOrNull()
         if (annotation == null) {
-            kspFail(
+            throw AutoBindException(
                 "Can't find AutoBinds annotation for class ${annotatedClass.simpleName}",
                 annotatedClass,
             )
@@ -82,7 +82,7 @@ internal class AutoBindsResolver(
                 } else if (DelegateBindingFactory::class.qualifiedName in superTypeNames) {
                     ModuleType.DelegateFactory(factoryDeclaration)
                 } else {
-                    kspFail(
+                    throw AutoBindException(
                         "AutoBinds Factory class '${factoryDeclaration.simpleName.asString()}' " +
                                 "must directly implement ClassBindingFactory or DelegateBindingFactory",
                         factoryDeclaration,

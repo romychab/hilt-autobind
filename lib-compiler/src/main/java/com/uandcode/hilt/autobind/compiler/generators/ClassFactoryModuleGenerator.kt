@@ -11,8 +11,8 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.uandcode.hilt.autobind.compiler.AutoBindException
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
-import com.uandcode.hilt.autobind.compiler.kspFail
 import com.uandcode.hilt.autobind.factories.AutoScoped
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import dagger.Provides
@@ -35,7 +35,7 @@ internal class ClassFactoryModuleGenerator(
             .primaryConstructor
             ?.isAnnotationPresent(Inject::class)
         if (hasInjectAnnotation != true) {
-            kspFail(
+            throw AutoBindException(
                 "Factory class must have a primary constructor with @Inject annotation",
                 factoryDeclaration,
             )
@@ -49,7 +49,7 @@ internal class ClassFactoryModuleGenerator(
                 || moduleInfo.isScopedBindingRequired
 
         return TypeSpec.objectBuilder(moduleClassName)
-            .applyHiltModuleAnnotationsAndModifiers(hiltComponentClassName)
+            .preBuildHiltModuleTypeSpec(hiltComponentClassName)
             .addFunction(
                 FunSpec.builder("provide$originSimpleName")
                     .addAnnotation(Provides::class)
