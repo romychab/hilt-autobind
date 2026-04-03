@@ -36,10 +36,11 @@ class AuthInterceptor @Inject constructor() : Interceptor
 Now you can inject `Map<String, Interceptor>` anywhere and Hilt will collect all
 contributions automatically:
 
-!!! warning
-    The annotation `@JvmSuppressWildcards` is required when injecting a map.
-    This is a current limitation of Dagger 2 library, since it generates Java
-    source code under the hood.
+<!-- block-start: warning -->
+The annotation `@JvmSuppressWildcards` is required when injecting a map.
+This is a current limitation of Dagger 2 library, since it generates Java
+source code under the hood.
+<!-- block-end -->
 
 ```kotlin
 class ApiClient @Inject constructor(
@@ -86,6 +87,12 @@ class ApiClient @Inject constructor(
     private val interceptors: Map<Class<*>, @JvmSuppressWildcards Interceptor>,
 )
 ```
+
+<!-- block-start: warning -->
+When using `@ClassKey`, the map key type at the injection site must be `Class<*>` (Java),
+**not** `KClass<*>` (Kotlin). Dagger 2 generates Java source code under the hood,
+so Kotlin's `KClass` is not recognized, use `Map<Class<*>, @JvmSuppressWildcards T>`.
+<!-- block-end -->
 
 ## Custom MapKey Annotations
 

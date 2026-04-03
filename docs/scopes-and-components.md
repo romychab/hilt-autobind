@@ -43,7 +43,8 @@ class SearchRepository @Inject constructor(
 }
 ```
 
-This works with both `@AutoBinds` and `@AutoBindsIntoSet`.
+This works with all `@AutoBinds`, `@AutoBindsIntoSet`, and `@AutoBindsIntoMap`
+annotations.
 
 ## Scope Validation
 
@@ -89,6 +90,7 @@ would contradict each other.
 | `@ServiceScoped`          | `ServiceComponent`          |
 | *(none)*                  | `SingletonComponent`        |
 
-!!! note
-    `@ViewScoped` maps to `ViewComponent` by default, not `ViewWithFragmentComponent`.
-    Use `installIn = HiltComponent.ViewWithFragment` explicitly if needed.
+<!-- block-start: note -->
+`@ViewScoped` maps to `ViewComponent` by default, not `ViewWithFragmentComponent`.
+Use `installIn = HiltComponent.ViewWithFragment` explicitly if needed.
+<!-- block-end -->

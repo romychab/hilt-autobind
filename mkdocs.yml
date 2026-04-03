@@ -32,7 +32,7 @@ nav:
   - Scopes & Components: scopes-and-components.md
   - Class Factory: class-factory.md
   - Delegate Factory: delegate-factory.md
-  - Set Multibinding: multibinding.md
+  - Set Multibinding: multibinding-set.md
   - Map Multibinding: multibinding-map.md
   - Qualifiers: qualifiers.md
   - Annotation Aliases: annotation-aliases.md
