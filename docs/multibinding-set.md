@@ -1,4 +1,4 @@
-# Multibinding
+# Set Multibinding
 
 ## Table of Contents
 
@@ -42,6 +42,12 @@ class ApiClient @Inject constructor(
     // interceptors contains LoggingInterceptor and AuthInterceptor
 }
 ```
+
+<!-- block-start: warning -->
+The annotation `@JvmSuppressWildcards` is required when injecting a map.
+This is a current limitation of Dagger 2 library, since it generates Java
+source code under the hood.
+<!-- block-end -->
 
 ## Combining with @AutoBinds
 

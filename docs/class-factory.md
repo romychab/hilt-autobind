@@ -24,7 +24,7 @@ class RetrofitBindingFactory @Inject constructor(
     private val retrofit: Retrofit,
 ) : ClassBindingFactory {
 
-    @AutoScoped
+    @AutoScoped // <-- optional
     override fun <T : Any> create(kClass: KClass<T>): T {
         return retrofit.create(kClass.java)
     }

@@ -218,8 +218,8 @@ The alias works with all factory types: `ClassBindingFactory` (shown above) and
 [Delegate Factory](delegate-factory.md) for details on each factory type.
 
 To make the factory binding scoped, you can either place `@AutoScoped` on the
-factory method, or place a scope annotation directly on the alias — see
-[Scope annotation on the alias](#scope-annotation-on-the-alias) above.
+factory method, or place a scope annotation directly on the alias. For more
+details, see [Scope annotation on the alias](#scope-annotation-on-the-alias) above.
 
 ## Multiple Classes with One Alias
 

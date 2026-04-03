@@ -26,7 +26,7 @@ class AppDatabaseFactory @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) : DelegateBindingFactory<AppDatabase> {
 
-    @AutoScoped
+    @AutoScoped // <-- optional, but for DB - highly recommended
     override fun provideDelegate(): AppDatabase {
         return Room.databaseBuilder(
             context,
@@ -45,6 +45,7 @@ Point the class to the factory using `@AutoBinds(factory = ...)`:
 @AutoBinds(factory = AppDatabaseFactory::class)
 @Database(entities = [NoteEntity::class, OrderEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
+    // Each DAO class is injectable now:
     abstract fun noteDao(): NoteDao
     abstract fun orderDao(): OrderDao
 }
@@ -111,8 +112,7 @@ A `DelegateBindingFactory` subclass must:
   `DelegateBindingFactory<AppDatabase>`).
 - Have a **primary constructor annotated with `@Inject`**.
 - **Directly implement** `DelegateBindingFactory` (not through an intermediate class).
-- **Declare `provideDelegate()` with `override`** directly in the factory class body —
-  an inherited implementation is not sufficient.
+- **Declare `provideDelegate()` with `override`** directly in the factory class body.
 - Have `provideDelegate()` **return the annotated class type** exactly (e.g., if
   `@AutoBinds(factory = MyDbFactory::class)` is on `AppDatabase`, then
   `provideDelegate()` must return `AppDatabase`).
