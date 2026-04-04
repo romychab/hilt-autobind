@@ -13,6 +13,7 @@ import com.uandcode.hilt.autobind.compiler.AutoBindException
 import com.uandcode.hilt.autobind.compiler.Const.METADATA_PACKAGE
 import com.uandcode.hilt.autobind.compiler.Const.META_ARG_NAME
 import com.uandcode.hilt.autobind.compiler.Const.META_BINDING_INFO
+import com.uandcode.hilt.autobind.compiler.CustomComponentResolver
 import com.uandcode.hilt.autobind.compiler.MetadataInfo
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
 import com.uandcode.hilt.autobind.compiler.generators.MetadataGenerator
@@ -24,11 +25,12 @@ import com.uandcode.hilt.autobind.compiler.resolver.collectors.failOnConflicting
 internal class AnnotatedSymbolsResolver(
     hiltModuleGenerator: HiltModuleGenerator,
     private val metadataGenerator: MetadataGenerator,
+    customComponentResolver: CustomComponentResolver,
 ) {
 
-    val autoBindsResolver = AutoBindsResolver(hiltModuleGenerator)
-    val autoBindsIntoSetResolver = AutoBindsIntoSetResolver(hiltModuleGenerator)
-    val autoBindsIntoMapResolver = AutoBindsIntoMapResolver(hiltModuleGenerator)
+    val autoBindsResolver = AutoBindsResolver(hiltModuleGenerator, customComponentResolver)
+    val autoBindsIntoSetResolver = AutoBindsIntoSetResolver(hiltModuleGenerator, customComponentResolver)
+    val autoBindsIntoMapResolver = AutoBindsIntoMapResolver(hiltModuleGenerator, customComponentResolver)
 
     val allResolvers = setOf(
         autoBindsResolver,

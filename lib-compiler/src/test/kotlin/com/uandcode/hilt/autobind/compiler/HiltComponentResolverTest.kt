@@ -681,13 +681,11 @@ class HiltComponentResolverTest {
     }
 
     @Test
-    fun `error when custom scope is used`() {
+    fun `error when custom scope is used without a DefineComponent class`() {
         val source = SourceFile.kotlin("Test.kt", """
             package test
 
             import com.uandcode.hilt.autobind.AutoBinds
-            import com.uandcode.hilt.autobind.HiltComponent
-            import dagger.hilt.android.scopes.ActivityScoped
             import javax.inject.Inject
             import javax.inject.Scope
 
@@ -703,9 +701,8 @@ class HiltComponentResolverTest {
 
         val result = compile(source)
         result.assertCompilationError()
-        assertTrue(result.messages.contains(
-            "unable to resolve Hilt component for scope 'CustomScope' on class 'RepoImpl'"
-        ))
+        assertTrue(result.messages.contains("unable to resolve Hilt component for scope 'CustomScope' " +
+                "on class 'RepoImpl'. No @DefineComponent class found with this scope."))
     }
 
 }

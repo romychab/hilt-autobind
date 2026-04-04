@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.6.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.6.0")
+    implementation("com.uandcode:hilt-autobind:0.7.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.7.0")
 }
 ```
 
@@ -66,6 +66,7 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 |------------------------------------------------------|---------------------------------|-------------------------------------------------------------------------------------|
 | [Basic binding](docs/basic-usage.md)                 | `@AutoBinds`                    | Generates `@Binds` modules for interface implementations                            |
 | [Scopes & components](docs/scopes-and-components.md) | `installIn`                     | Auto-detects or explicitly sets the Hilt component                                  |
+| [Custom components](docs/custom-components.md)       | `installInCustomComponent`      | Installs bindings into custom Hilt components defined with `@DefineComponent`       |
 | [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)`     | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
 | [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
 | [Set multibinding](docs/multibinding-set.md)         | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
@@ -83,12 +84,12 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | **Qualifiers**                       | ✅                                                                    | ✅                                                     | ✅                                                           |
 | **Supertype selection**              | ✅                                                                    | ✅                                                     | ✅                                                           |
 | **Multibinding**                     | ✅                                                                    | ✅                                                     | ❌                                                           |
+| **Custom Hilt components**           | ✅                                                                    | ✅                                                     | ✅                                                           |
 | **Auto-binding to multiple types**   | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Combine basic-/multi- binding**    | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Binding by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Binding by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ⚠️ (`@FactoryMethod`)                                       |
 | **Annotation aliases**               | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Custom Hilt components**           | ❌ ([Issue #18](https://github.com/romychab/hilt-autobind/issues/18)) | ✅                                                     | ✅                                                           |
 
 ## Requirements
 

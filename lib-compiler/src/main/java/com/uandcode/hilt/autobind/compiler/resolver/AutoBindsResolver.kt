@@ -7,11 +7,13 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.compiler.AutoBindException
-import com.uandcode.hilt.autobind.compiler.Const.AUTOBINDS_NAME
 import com.uandcode.hilt.autobind.compiler.AutoBindingParamsResolver
+import com.uandcode.hilt.autobind.compiler.Const.AUTOBINDS_NAME
+import com.uandcode.hilt.autobind.compiler.CustomComponentResolver
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
 import com.uandcode.hilt.autobind.compiler.ModuleType
 import com.uandcode.hilt.autobind.compiler.generators.HiltModuleGenerator
+import com.uandcode.hilt.autobind.compiler.generators.findCustomComponentFqn
 import com.uandcode.hilt.autobind.compiler.generators.findFactoryKType
 import com.uandcode.hilt.autobind.compiler.resolver.base.AutoResolver
 import com.uandcode.hilt.autobind.compiler.resolver.collectors.BindingTypesCollector
@@ -22,11 +24,12 @@ import kotlin.reflect.KClass
 
 internal class AutoBindsResolver(
     hiltModuleGenerator: HiltModuleGenerator,
+    customComponentResolver: CustomComponentResolver,
 ) : AutoResolver(hiltModuleGenerator) {
 
     override val annotationClass: KClass<out Annotation> = AutoBinds::class
 
-    private val componentResolver = AutoBindingParamsResolver()
+    private val componentResolver = AutoBindingParamsResolver(customComponentResolver)
     private val bindingTypesCollector = BindingTypesCollector()
 
     override fun resolve(
@@ -44,8 +47,11 @@ internal class AutoBindsResolver(
             )
         }
 
+        val customComponentFqn = findCustomComponentFqn(annotationSource, AUTOBINDS_NAME)
+
         val resolvedComponent = componentResolver.resolve(
             installInComponent = annotation.installIn,
+            installInCustomComponentFqn = customComponentFqn,
             annotatedClass = annotatedClass,
             annotationSource = annotationSource,
             annotationName = originAnnotationName,

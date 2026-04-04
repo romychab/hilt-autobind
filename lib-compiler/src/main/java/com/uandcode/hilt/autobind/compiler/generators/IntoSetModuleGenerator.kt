@@ -43,8 +43,9 @@ internal class IntoSetModuleGenerator(
             .addAnnotation(Binds::class)
             .addAnnotation(IntoSet::class)
             .apply {
-                if (moduleInfo.isScopedBindingRequired) {
-                    addAnnotation(moduleInfo.scopeClassName)
+                val scope = moduleInfo.scopeClassName
+                if (moduleInfo.isScopedBindingRequired && scope != null) {
+                    addAnnotation(scope)
                 }
             }
             .applyQualifier(moduleInfo)

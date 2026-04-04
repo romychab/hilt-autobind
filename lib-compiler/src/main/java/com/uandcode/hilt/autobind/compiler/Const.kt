@@ -9,4 +9,8 @@ internal object Const {
     const val META_ARG_NAME = "qualifiedMetaAnnotationName"
 
     const val METADATA_PACKAGE = "com.uandcode.hilt.autobind.metadata"
+
+    const val SCOPE_NAME = "Scope"
+    const val QUALIFIER_NAME = "Qualifier"
+    const val DEFINE_COMPONENT_NAME = "DefineComponent"
 }

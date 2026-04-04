@@ -3,6 +3,8 @@ package com.uandcode.hilt.autobind.compiler.generators
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.uandcode.hilt.autobind.NoCustomComponent
+import com.uandcode.hilt.autobind.compiler.resolver.base.cast
 
 internal fun KSClassDeclaration.getTargetSuperTypes(): List<KSType> {
     return superTypes
@@ -53,4 +55,20 @@ internal fun findFactoryKType(
         ?.value as? KSType
 }
 
+internal fun findCustomComponentFqn(
+    annotationSource: KSClassDeclaration,
+    annotationName: String,
+): String? {
+    return annotationSource
+        .annotations
+        .firstOrNull { it.shortName.asString() == annotationName }
+        ?.arguments
+        ?.firstOrNull { it.name?.asString() == CUSTOM_COMPONENT_ARG_NAME }
+        ?.value
+        ?.cast<KSType>()
+        ?.declaration?.qualifiedName?.asString()
+        ?.takeIf { it != NoCustomComponent::class.qualifiedName }
+}
+
 private const val FACTORY_ARG_NAME = "factory"
+private const val CUSTOM_COMPONENT_ARG_NAME = "installInCustomComponent"

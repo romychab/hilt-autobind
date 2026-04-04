@@ -3,6 +3,7 @@ package com.uandcode.hilt.autobind
 import com.uandcode.hilt.autobind.factories.BindingFactory
 import com.uandcode.hilt.autobind.factories.ClassBindingFactory
 import com.uandcode.hilt.autobind.factories.NoOpBindingFactory
+import com.uandcode.hilt.autobind.factories.DelegateBindingFactory
 import kotlin.reflect.KClass
 
 /**
@@ -22,8 +23,7 @@ import kotlin.reflect.KClass
  * ```
  * Generates a `@Provides` module that delegates instance creation to the factory.
  *
- * **Delegate factory mode** - annotate a class and provide a
- * [com.uandcode.hilt.autobind.factories.DelegateBindingFactory]:
+ * **Delegate factory mode** - annotate a class and provide a [DelegateBindingFactory]:
  * ```
  * @AutoBinds(factory = AppDatabaseFactory::class)
  * abstract class AppDatabase : RoomDatabase() {
@@ -41,6 +41,10 @@ import kotlin.reflect.KClass
  *   types are used as binding targets instead of all direct supertypes. Each type must be
  *   a transitive supertype of the annotated class; a compile-time error is emitted otherwise.
  *   Supports grandparent classes and interfaces that are not direct supertypes.
+ * @property installInCustomComponent optional custom Hilt component class (defined with `@DefineComponent`)
+ *   to install the generated module in. When set, overrides [installIn]. Setting both [installIn] and
+ *   [installInCustomComponent] is a compile-time error. Defaults to [NoCustomComponent], which signals
+ *   that no custom component is specified.
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -48,4 +52,5 @@ public annotation class AutoBinds(
     val installIn: HiltComponent = HiltComponent.Unspecified,
     val factory: KClass<out BindingFactory> = NoOpBindingFactory::class,
     val bindTo: Array<KClass<*>> = [],
+    val installInCustomComponent: KClass<*> = NoCustomComponent::class,
 )

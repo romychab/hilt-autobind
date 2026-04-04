@@ -46,8 +46,9 @@ internal class IntoMapModuleGenerator(
             .addAnnotation(IntoMap::class)
             .addAnnotation(mapKeyAnnotationSpec)
             .apply {
-                if (moduleInfo.isScopedBindingRequired) {
-                    addAnnotation(moduleInfo.scopeClassName)
+                val scope = moduleInfo.scopeClassName
+                if (moduleInfo.isScopedBindingRequired && scope != null) {
+                    addAnnotation(scope)
                 }
             }
             .applyQualifier(moduleInfo)

@@ -5,6 +5,7 @@
 - [Auto-detection (default)](#auto-detection-default)
 - [Explicit component](#explicit-component)
 - [Scope validation](#scope-validation)
+- [Custom components](#custom-components)
 - [Component and scope reference](#component-and-scope-reference)
 
 ## Auto-detection (Default)
@@ -61,6 +62,10 @@ class RepoImpl @Inject constructor() : Repo
 This prevents accidental misconfiguration where the scope and the component
 would contradict each other.
 
+## Custom Components
+
+For custom Hilt components defined with `@DefineComponent`, see the [Custom Components](custom-components.md) page.
+
 ## Component and Scope Reference
 
 ### HiltComponent values
@@ -76,6 +81,11 @@ would contradict each other.
 | `View`                    | `ViewComponent`             |
 | `ViewWithFragment`        | `ViewWithFragmentComponent` |
 | `Service`                 | `ServiceComponent`          |
+
+<!-- block-start: note -->
+For custom Hilt components defined with `@DefineComponent`, use `installInCustomComponent`
+instead of `installIn`. The two parameters are mutually exclusive.
+<!-- block-end -->
 
 ### Scope auto-detection mapping
 

@@ -39,8 +39,9 @@ internal class DefaultModuleGenerator(
             .addParameter(name = "impl", type = originClassName)
             .addAnnotation(Binds::class)
             .apply {
-                if (moduleInfo.isScopedBindingRequired) {
-                    addAnnotation(moduleInfo.scopeClassName)
+                val scope = moduleInfo.scopeClassName
+                if (moduleInfo.isScopedBindingRequired && scope != null) {
+                    addAnnotation(scope)
                 }
             }
             .applyQualifier(moduleInfo)
