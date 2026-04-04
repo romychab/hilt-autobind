@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.ClassName
 
 internal data class AutoBindingParams(
     val hiltComponentClassName: ClassName,
-    val hiltScopeClassName: ClassName,
+    val hiltScopeClassName: ClassName?,   // null for unscoped custom components
     val isScopedBindingRequired: Boolean,
     val qualifier: KSAnnotation?,
 )

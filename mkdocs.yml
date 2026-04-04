@@ -30,6 +30,7 @@ nav:
   - Installation: installation.md
   - Basic Usage: basic-usage.md
   - Scopes & Components: scopes-and-components.md
+  - Custom Components: custom-components.md
   - Class Factory: class-factory.md
   - Delegate Factory: delegate-factory.md
   - Set Multibinding: multibinding-set.md

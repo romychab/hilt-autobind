@@ -18,7 +18,7 @@ internal data class ModuleInfo constructor(
     val bindTargets: List<KSType>? = null,
 ) {
     val hiltComponentClassName: ClassName = autoBindingParams.hiltComponentClassName
-    val scopeClassName: ClassName = autoBindingParams.hiltScopeClassName
+    val scopeClassName: ClassName? = autoBindingParams.hiltScopeClassName
     val isScopedBindingRequired: Boolean = autoBindingParams.isScopedBindingRequired
     val qualifier: KSAnnotation? = autoBindingParams.qualifier
     val originClassName: ClassName = annotatedClass.toClassName()

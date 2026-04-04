@@ -14,19 +14,19 @@ import com.uandcode.hilt.autobind.compiler.resolver.AnnotatedSymbolsResolver
 
 class AutoBindingSymbolProcessor(
     private val logger: KSPLogger,
-    private val codeGenerator: CodeGenerator,
+    codeGenerator: CodeGenerator,
 ) : SymbolProcessor {
 
     private val metadataGenerator = MetadataGenerator(codeGenerator)
     private val hiltModuleGenerator = HiltModuleGenerator(logger, codeGenerator)
 
-    private val annotatedSymbolsResolver = AnnotatedSymbolsResolver(
-        hiltModuleGenerator = hiltModuleGenerator,
-        metadataGenerator = metadataGenerator,
-    )
-
     override fun process(resolver: Resolver): List<KSAnnotated> {
         return try {
+            val annotatedSymbolsResolver = AnnotatedSymbolsResolver(
+                hiltModuleGenerator = hiltModuleGenerator,
+                metadataGenerator = metadataGenerator,
+                customComponentResolver = CustomComponentResolver(resolver)
+            )
             annotatedSymbolsResolver.processAnnotatedSymbols(resolver)
         } catch (e: AutoBindException) {
             logger.error(e.message ?: "Error!", e.symbol)

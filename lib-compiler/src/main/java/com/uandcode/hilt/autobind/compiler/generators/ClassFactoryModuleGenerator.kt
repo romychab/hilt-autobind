@@ -54,8 +54,9 @@ internal class ClassFactoryModuleGenerator(
                 FunSpec.builder("provide$originSimpleName")
                     .addAnnotation(Provides::class)
                     .apply {
-                        if (isAutoScoped) {
-                            addAnnotation(scopeClassName)
+                        val scope = scopeClassName
+                        if (isAutoScoped && scope != null) {
+                            addAnnotation(scope)
                         }
                     }
                     .applyQualifier(moduleInfo)
