@@ -301,9 +301,9 @@ class IntoMapBindingTest {
             @InstallIn(SingletonComponent::class)
             internal interface LoggingInterceptor__IntoMapModule {
               @Binds
+              @Named(`value` = "debug")
               @IntoMap
               @StringKey(`value` = "logging")
-              @Named(`value` = "debug")
               public fun bindToInterceptor(`impl`: LoggingInterceptor): Interceptor
             }
         """.trimIndent())
@@ -350,9 +350,9 @@ class IntoMapBindingTest {
             @InstallIn(ActivityComponent::class)
             internal interface MainHandler__IntoMapModule {
               @Binds
+              @ActivityScoped
               @IntoMap
               @StringKey(`value` = "main")
-              @ActivityScoped
               public fun bindToHandler(`impl`: MainHandler): Handler
             }
         """.trimIndent())
