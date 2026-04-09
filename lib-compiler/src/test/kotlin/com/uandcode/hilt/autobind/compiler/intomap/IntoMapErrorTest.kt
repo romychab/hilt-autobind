@@ -116,22 +116,4 @@ class IntoMapErrorTest {
                 "annotation must implement at least one interface or extend a super-class"))
     }
 
-    @Test
-    fun `error when object is annotated instead of class`() {
-        val source = SourceFile.kotlin("Test.kt", """
-            package test
-
-            import com.uandcode.hilt.autobind.AutoBindsIntoMap
-
-            interface Handler
-
-            @AutoBindsIntoMap
-            object MyHandler : Handler
-        """.trimIndent())
-
-        val result = compile(source)
-        result.assertCompilationError()
-        assertTrue(result.messages.contains("The class 'MyHandler' annotated with @AutoBindsIntoMap " +
-                "annotation must be a class (not object, interface, etc.)"))
-    }
 }

@@ -289,9 +289,9 @@ class MetaAnnotationIntoMapBindingTest {
             @InstallIn(SingletonComponent::class)
             internal interface MyHandler__IntoMapModule {
               @Binds
+              @DebugHandlers
               @IntoMap
               @StringKey(`value` = "main")
-              @DebugHandlers
               public fun bindToHandler(`impl`: MyHandler): Handler
             }
         """.trimIndent())
@@ -337,9 +337,9 @@ class MetaAnnotationIntoMapBindingTest {
             @InstallIn(ActivityComponent::class)
             internal interface MainHandler__IntoMapModule {
               @Binds
+              @ActivityScoped
               @IntoMap
               @StringKey(`value` = "main")
-              @ActivityScoped
               public fun bindToHandler(`impl`: MainHandler): Handler
             }
         """.trimIndent())

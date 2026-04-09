@@ -178,8 +178,8 @@ class QualifierBindingTest {
             @InstallIn(SingletonComponent::class)
             internal interface RepoImplModule {
               @Binds
-              @Singleton
               @Named(`value` = "main")
+              @Singleton
               public fun bindToRepo(`impl`: RepoImpl): Repo
             }
         """.trimIndent())
@@ -300,8 +300,8 @@ class QualifierBindingTest {
             @InstallIn(SingletonComponent::class)
             internal interface LoggingInterceptor__IntoSetModule {
               @Binds
-              @IntoSet
               @Named(`value` = "logging")
+              @IntoSet
               public fun bindToInterceptor(`impl`: LoggingInterceptor): Interceptor
             }
         """.trimIndent())
@@ -348,8 +348,8 @@ class QualifierBindingTest {
             @InstallIn(SingletonComponent::class)
             internal interface MainHandler__IntoSetModule {
               @Binds
-              @IntoSet
               @HandlerQualifier
+              @IntoSet
               public fun bindToHandler(`impl`: MainHandler): Handler
             }
         """.trimIndent())

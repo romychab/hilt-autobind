@@ -175,8 +175,8 @@ class MetaAnnotationIntoSetBindingTest {
             @InstallIn(ActivityComponent::class)
             internal interface MainHandler__IntoSetModule {
               @Binds
-              @IntoSet
               @ActivityScoped
+              @IntoSet
               public fun bindToHandler(`impl`: MainHandler): Handler
             }
         """.trimIndent())
