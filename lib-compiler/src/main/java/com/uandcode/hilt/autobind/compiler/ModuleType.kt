@@ -9,14 +9,19 @@ import com.squareup.kotlinpoet.AnnotationSpec
 internal sealed class ModuleType {
 
     /** Generate an interface with `@Binds` functions. */
-    data object Default : ModuleType()
+    data class Default(
+        val isObject: Boolean,
+    ) : ModuleType()
 
     /** Generate an interface with `@Binds` and `@IntoSet` functions. */
-    data object IntoSet : ModuleType()
+    data class IntoSet(
+        val isObject: Boolean,
+    ) : ModuleType()
 
     /** Generate an interface with `@Binds`, `@IntoMap`, and a map key annotation functions. */
     data class IntoMap(
         val mapKeyAnnotationSpec: AnnotationSpec,
+        val isObject: Boolean,
     ) : ModuleType()
 
     /** Generate an object with a `@Provides` function that delegates to a factory. */

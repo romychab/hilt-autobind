@@ -9,7 +9,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
 /**
  * Holds naming information for the generated Hilt module.
  */
-internal data class ModuleInfo constructor(
+internal data class ModuleInfo(
     val annotatedClass: KSClassDeclaration,
     val annotationName: String,
     val annotationSource: KSClassDeclaration,

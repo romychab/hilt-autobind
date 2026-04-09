@@ -10,9 +10,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.Modifier
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.uandcode.hilt.autobind.compiler.AutoBindException
@@ -60,22 +58,15 @@ internal abstract class AbstractModuleGenerator(
     protected fun ModuleInfo.superTypesNotFoundException(annotatedClass: KSClassDeclaration) =
         commonKspException("must implement at least one interface or extend a super-class", annotatedClass)
 
-    protected fun FunSpec.Builder.applyQualifier(
-        moduleInfo: ModuleInfo,
-    ) = apply {
-        if (moduleInfo.qualifier != null) {
-            addAnnotation(moduleInfo.qualifier.toAnnotationSpec())
-        }
-    }
-
     /**
      * @return The list of target super-types for which binding modules
      *   must be generated.
      */
     protected fun ModuleInfo.validateCommonBindingRules(): List<KSType> {
-        if (annotatedClass.classKind != ClassKind.CLASS) {
-            throw commonKspException("must be a class (not object, interface, etc.)", annotatedClass)
+        if (annotatedClass.classKind != ClassKind.CLASS && annotatedClass.classKind != ClassKind.OBJECT) {
+            throw commonKspException("must be a class or object (not interface, etc.)", annotatedClass)
         }
+        val isInjectRequired = annotatedClass.classKind != ClassKind.OBJECT
 
         if (Modifier.INNER in annotatedClass.modifiers) {
             throw commonKspException("must not be an inner class (remove the 'inner' keyword)", annotatedClass)
@@ -90,11 +81,16 @@ internal abstract class AbstractModuleGenerator(
             throw commonKspException("must be a non-abstract class", annotatedClass)
         }
 
-        val hasInjectAnnotation = annotatedClass
-            .primaryConstructor
-            ?.isAnnotationPresent(Inject::class)
-        if (hasInjectAnnotation != true) {
-            throw commonKspException("must have a primary constructor with @Inject annotation", annotatedClass)
+        if (isInjectRequired) {
+            val hasInjectAnnotation = annotatedClass
+                .primaryConstructor
+                ?.isAnnotationPresent(Inject::class)
+            if (hasInjectAnnotation != true) {
+                throw commonKspException(
+                    "must have a primary constructor with @Inject annotation",
+                    annotatedClass
+                )
+            }
         }
 
         return targetSuperTypes
