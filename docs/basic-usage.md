@@ -6,15 +6,16 @@
 - [Multiple interfaces](#multiple-interfaces)
 - [Generic interfaces](#generic-interfaces)
 - [Parent class binding](#parent-class-binding)
+- [Object binding](#object-binding)
 - [Selecting specific binding targets](#selecting-specific-binding-targets)
 - [Qualifier annotations](#qualifier-annotations)
 - [How it works](#how-it-works)
-- [Requirements for annotated classes](#requirements-for-annotated-classes)
+- [Requirements for annotated classes and objects](#requirements-for-annotated-classes-and-objects)
 
 ## Single Interface Binding
 
-Annotate a concrete class that implements an interface or extends a base class with `@AutoBinds`, 
-and the processor generates a Hilt `@Binds` module automatically.
+Annotate a concrete class or Kotlin `object` that implements an interface or extends a base class
+with `@AutoBinds`, and the processor generates a Hilt module automatically.
 
 ```kotlin
 interface UserRepository {
@@ -138,6 +139,37 @@ class HomeService @Inject constructor() : BaseService(), Trackable
 This generates a single module with `@Binds` functions for both `BaseService`
 and `Trackable`.
 
+## Object Binding
+
+Kotlin `object` declarations are supported. Since objects are singletons managed
+by the language itself, no `@Inject` constructor is needed. The processor
+generates `@Provides` functions (instead of `@Binds`) that return the object
+instance directly:
+
+```kotlin
+interface Navigator
+
+@AutoBinds
+object NoOpNavigator : Navigator
+```
+
+**Generated code:**
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal object NoOpNavigatorModule {
+    @Provides
+    fun bindToNavigator(): Navigator = NoOpNavigator
+}
+```
+
+This is useful for stateless implementations like no-op stubs, or default strategies.
+
+All features work with objects in the same way as with classes: `installIn`,
+`bindTo`, qualifiers, scopes, custom components, and annotation aliases. Objects
+also work with `@AutoBindsIntoSet` and `@AutoBindsIntoMap`.
+
 ## Selecting Specific Binding Targets
 
 By default, `@AutoBinds` generates a binding for every direct supertype. Use
@@ -192,26 +224,34 @@ Custom `@Qualifier` annotations are supported in the same way. See
 ## How It Works
 
 Hilt AutoBind is a [KSP](https://github.com/google/ksp) annotation processor
-that runs at compile time. For each class annotated with `@AutoBinds`, it:
+that runs at compile time. For each class or object annotated with `@AutoBinds`, it:
 
 1. Finds all direct supertypes (implemented interfaces and extended parent
    classes, excluding `Any`).
-2. Generates an `internal interface` Hilt module with a `@Binds` function for
-   each supertype.
-3. Installs the module in the appropriate Hilt component (see
+2. For **classes**: generates an `internal interface` Hilt module with a `@Binds`
+   function for each supertype.
+3. For **objects**: generates an `internal object` Hilt module with a `@Provides`
+   function for each supertype, returning the object instance directly.
+4. Installs the module in the appropriate Hilt component (see
    [Scopes and Components](scopes-and-components.md)).
 
 The generated modules are `internal`, so they don't pollute your module's
 public API.
 
-## Requirements for Annotated Classes
+## Requirements for Annotated Classes and Objects
 
-A class annotated with `@AutoBinds` (in default mode, without a `factory`) must:
+A **class** annotated with `@AutoBinds` (in default mode, without a `factory`) must:
 
-- Be a **concrete class** (not an interface, object, or enum).
+- Be a **concrete class** (not an interface or enum).
 - Be **non-abstract** (no `abstract` modifier).
 - **Not be an inner class** (no `inner` modifier).
 - Have a **primary constructor annotated with `@Inject`**.
 - Implement **at least one interface** or extend a **non-`Any` parent class**.
+
+A Kotlin **object** annotated with `@AutoBinds` must:
+
+- Implement **at least one interface** or extend a **non-`Any` parent class**.
+- **Not** use the `factory` parameter (objects are their own instances and do not
+  need a factory).
 
 The processor emits a compile-time error if any of these conditions are not met.

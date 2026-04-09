@@ -14,10 +14,10 @@
 
 ## Overview
 
-Use `@AutoBindsIntoMap` to contribute a class into a Dagger multibinding `Map`.
-Each contribution requires a map key annotation (e.g. `@StringKey`, `@IntKey`,
-`@ClassKey`, or any custom `@MapKey` annotation). The processor forwards the
-key annotation to the generated `@Binds @IntoMap` function.
+Use `@AutoBindsIntoMap` to contribute a class or Kotlin `object` into a Dagger
+multibinding `Map`. Each contribution requires a map key annotation (e.g.
+`@StringKey`, `@IntKey`, `@ClassKey`, or any custom `@MapKey` annotation). The
+processor forwards the key annotation to the generated binding function.
 
 ## Contributing to a Map
 
@@ -183,7 +183,7 @@ if a listed type is not a supertype of the annotated class.
 
 ## Generated Code
 
-For each annotated class, the processor generates an `interface` Hilt module
+For each annotated **class**, the processor generates an `interface` Hilt module
 with `@Binds @IntoMap` functions:
 
 ```kotlin
@@ -194,6 +194,20 @@ internal interface LoggingInterceptor__IntoMapModule {
     @IntoMap
     @StringKey("logging")
     fun bindToInterceptor(impl: LoggingInterceptor): Interceptor
+}
+```
+
+For each annotated **object**, the processor generates an `object` Hilt module
+with `@Provides @IntoMap` functions:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal object NoOpInterceptor__IntoMapModule {
+    @Provides
+    @IntoMap
+    @StringKey("noop")
+    fun bindToInterceptor(): Interceptor = NoOpInterceptor
 }
 ```
 
@@ -210,6 +224,5 @@ internal interface LoggingInterceptor__IntoMapModule {
 }
 ```
 
-The same class requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes)
-apply: the class must be concrete, non-abstract, not an inner class, have `@Inject` on its
-primary constructor, and implement at least one interface or extend a parent class.
+The same requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes-and-objects)
+apply.

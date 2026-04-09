@@ -11,10 +11,10 @@
 
 ## Overview
 
-Use `@AutoBindsIntoSet` to contribute a class into a Dagger multibinding `Set`
-of each direct supertype (implemented interfaces and extended parent classes).
-This lets you collect multiple implementations automatically without maintaining
-a manual module.
+Use `@AutoBindsIntoSet` to contribute a class or Kotlin `object` into a Dagger
+multibinding `Set` of each direct supertype (implemented interfaces and extended
+parent classes). This lets you collect multiple implementations automatically
+without maintaining a manual module.
 
 ## Contributing to a Set
 
@@ -99,7 +99,7 @@ if a listed type is not a supertype of the annotated class.
 
 ## Generated Code
 
-For each annotated class, the processor generates an `interface` Hilt module
+For each annotated **class**, the processor generates an `interface` Hilt module
 with `@Binds @IntoSet` functions:
 
 ```kotlin
@@ -111,6 +111,17 @@ internal interface LoggingInterceptor__IntoSetModule {
 }
 ```
 
-The same class requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes)
-apply: the class must be concrete, non-abstract, not an inner class, have `@Inject` on its
-primary constructor, and implement at least one interface or extend a parent class.
+For each annotated **object**, the processor generates an `object` Hilt module
+with `@Provides @IntoSet` functions:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+internal object NoOpInterceptor__IntoSetModule {
+    @Provides @IntoSet
+    fun bindToInterceptor(): Interceptor = NoOpInterceptor
+}
+```
+
+The same requirements as [basic usage](basic-usage.md#requirements-for-annotated-classes-and-objects)
+apply.

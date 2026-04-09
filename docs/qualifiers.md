@@ -20,7 +20,8 @@ When two classes implement the same interface but should be injected in differen
 a qualifier annotation tells Hilt (and Dagger) which binding to use.
 
 The annotation processor forwards any qualifier annotation found on the annotated class
-(or its alias) directly to the generated binding function. No extra configuration is needed.
+or object (or its alias) directly to the generated binding function. No extra configuration
+is needed.
 
 ## Using `@Named` qualifier
 
