@@ -7,11 +7,8 @@ import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
-import dagger.Binds
 import dagger.multibindings.IntoMap
 
 /**
@@ -23,13 +20,16 @@ internal class IntoMapModuleGenerator(
     logger: KSPLogger,
 ) : AbstractModuleGenerator(logger = logger) {
 
-    fun generate(moduleInfo: ModuleInfo, mapKeyAnnotationSpec: AnnotationSpec): TypeSpec = with(moduleInfo) {
+    fun generate(
+        moduleInfo: ModuleInfo,
+        mapKeyAnnotationSpec: AnnotationSpec,
+        isObject: Boolean,
+    ): TypeSpec = with(moduleInfo) {
         val targetSuperTypes = validateCommonBindingRules()
-        return TypeSpec
-            .interfaceBuilder(className = moduleClassName)
+        return createTypeSpecBuilder(isObject)
             .preBuildHiltModuleTypeSpec(hiltComponentClassName)
             .apply {
-                addBindIntoMapFunctions(moduleInfo, originClassName, targetSuperTypes, mapKeyAnnotationSpec)
+                addBindIntoMapFunctions(moduleInfo, originClassName, targetSuperTypes, mapKeyAnnotationSpec, isObject)
             }
             .build()
     }
@@ -39,23 +39,13 @@ internal class IntoMapModuleGenerator(
         originClassName: ClassName,
         targetSuperTypes: List<KSType>,
         mapKeyAnnotationSpec: AnnotationSpec,
-    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
-        val funSpec = FunSpec.builder(it.functionName)
-            .addParameter(name = "impl", type = originClassName)
-            .addAnnotation(Binds::class)
+        isObject: Boolean,
+    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) { targetSuperType ->
+        preBuildBinder(moduleInfo, targetSuperType, originClassName, isObject)
             .addAnnotation(IntoMap::class)
             .addAnnotation(mapKeyAnnotationSpec)
-            .apply {
-                val scope = moduleInfo.scopeClassName
-                if (moduleInfo.isScopedBindingRequired && scope != null) {
-                    addAnnotation(scope)
-                }
-            }
-            .applyQualifier(moduleInfo)
-            .addModifiers(KModifier.ABSTRACT)
-            .returns(it.supertypeTypeName)
             .build()
-        addFunction(funSpec)
+            .let(::addFunction)
     }
 
 }

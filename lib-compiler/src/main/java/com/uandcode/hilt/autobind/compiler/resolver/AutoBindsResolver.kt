@@ -4,6 +4,7 @@ package com.uandcode.hilt.autobind.compiler.resolver
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.compiler.AutoBindException
@@ -71,11 +72,15 @@ internal class AutoBindsResolver(
             annotationName = originAnnotationName,
             bindTargets = bindTargets,
         )
-        val moduleType = getModuleType(annotationSource)
+        val isObject = annotatedClass.classKind == ClassKind.OBJECT
+        val moduleType = getModuleType(annotationSource, isObject)
         generator.generateHiltModule(moduleType, moduleInfo)
     }
 
-    private fun getModuleType(annotationSource: KSClassDeclaration): ModuleType {
+    private fun getModuleType(
+        annotationSource: KSClassDeclaration,
+        isObject: Boolean,
+    ): ModuleType {
         return findFactoryKType(annotationSource, AUTOBINDS_NAME)
             ?.let { it.declaration as? KSClassDeclaration }
             ?.takeIf { it.qualifiedName?.asString() != NoOpBindingFactory::class.qualifiedName }
@@ -94,6 +99,6 @@ internal class AutoBindsResolver(
                         factoryDeclaration,
                     )
                 }
-            } ?: ModuleType.Default
+            } ?: ModuleType.Default(isObject)
     }
 }

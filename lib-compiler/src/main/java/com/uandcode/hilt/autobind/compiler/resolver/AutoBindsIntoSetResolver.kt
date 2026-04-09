@@ -4,6 +4,7 @@ package com.uandcode.hilt.autobind.compiler.resolver
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
 import com.uandcode.hilt.autobind.compiler.AutoBindException
@@ -65,6 +66,7 @@ internal class AutoBindsIntoSetResolver(
             annotationName = originAnnotationName,
             bindTargets = bindTargets,
         )
-        generator.generateHiltModule(ModuleType.IntoSet, moduleInfo)
+        val isObject = annotatedClass.classKind == ClassKind.OBJECT
+        generator.generateHiltModule(ModuleType.IntoSet(isObject), moduleInfo)
     }
 }

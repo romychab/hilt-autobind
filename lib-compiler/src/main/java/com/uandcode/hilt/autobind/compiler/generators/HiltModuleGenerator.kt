@@ -26,9 +26,13 @@ internal class HiltModuleGenerator(
         moduleInfo: ModuleInfo
     ) {
         val typeSpec = when (type) {
-            is ModuleType.Default -> defaultModuleGenerator.generate(moduleInfo)
-            is ModuleType.IntoSet -> intoSetModuleGenerator.generate(moduleInfo)
-            is ModuleType.IntoMap -> intoMapModuleGenerator.generate(moduleInfo, type.mapKeyAnnotationSpec)
+            is ModuleType.Default -> defaultModuleGenerator.generate(moduleInfo, type.isObject)
+            is ModuleType.IntoSet -> intoSetModuleGenerator.generate(moduleInfo, type.isObject)
+            is ModuleType.IntoMap -> intoMapModuleGenerator.generate(
+                moduleInfo = moduleInfo,
+                mapKeyAnnotationSpec = type.mapKeyAnnotationSpec,
+                isObject = type.isObject,
+            )
             is ModuleType.ClassFactory -> classFactoryModuleGenerator.generate(
                 moduleInfo = moduleInfo,
                 factoryDeclaration = type.factoryDeclaration,

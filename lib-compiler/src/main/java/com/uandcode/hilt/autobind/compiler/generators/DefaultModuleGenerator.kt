@@ -6,11 +6,8 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.uandcode.hilt.autobind.compiler.ModuleInfo
-import dagger.Binds
 
 /**
  * Generates an interface-based Hilt module with `@Binds` functions
@@ -20,12 +17,15 @@ internal class DefaultModuleGenerator(
     logger: KSPLogger,
 ) : AbstractModuleGenerator(logger) {
 
-    fun generate(moduleInfo: ModuleInfo): TypeSpec = with(moduleInfo) {
+    fun generate(
+        moduleInfo: ModuleInfo,
+        isObject: Boolean,
+    ): TypeSpec = with(moduleInfo) {
         val targetSuperTypes = validateCommonBindingRules()
-        return TypeSpec.interfaceBuilder(className = moduleClassName)
+        return createTypeSpecBuilder(isObject)
             .preBuildHiltModuleTypeSpec(hiltComponentClassName)
             .apply {
-                addBindFunctions(moduleInfo, originClassName, targetSuperTypes)
+                addBindFunctions(moduleInfo, originClassName, targetSuperTypes, isObject)
             }
             .build()
     }
@@ -34,21 +34,11 @@ internal class DefaultModuleGenerator(
         moduleInfo: ModuleInfo,
         originClassName: ClassName,
         targetSuperTypes: List<KSType>,
-    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) {
-        val funSpec = FunSpec.builder(it.functionName)
-            .addParameter(name = "impl", type = originClassName)
-            .addAnnotation(Binds::class)
-            .apply {
-                val scope = moduleInfo.scopeClassName
-                if (moduleInfo.isScopedBindingRequired && scope != null) {
-                    addAnnotation(scope)
-                }
-            }
-            .applyQualifier(moduleInfo)
-            .addModifiers(KModifier.ABSTRACT)
-            .returns(it.supertypeTypeName)
+        isObject: Boolean,
+    ) = forEachTargetSuperType(moduleInfo, targetSuperTypes) { targetSuperType ->
+        preBuildBinder(moduleInfo, targetSuperType, originClassName, isObject)
             .build()
-        addFunction(funSpec)
+            .let(::addFunction)
     }
 
 }
