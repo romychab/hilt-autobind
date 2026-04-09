@@ -347,7 +347,7 @@ scope annotations — are forwarded the same way as with `@AutoBinds` aliases.
 An annotation used as an `@AutoBinds`, `@AutoBindsIntoSet`, or `@AutoBindsIntoMap` alias must:
 
 - Be an **annotation class** (declared with the `annotation class` keyword).
-- Declare **`@Target(AnnotationTarget.CLASS)`** so it can be applied to classes and interfaces.
+- Declare **`@Target(AnnotationTarget.CLASS)`** so it can be applied to classes, objects, and interfaces.
 - Carry `@AutoBinds` or `@AutoBindsIntoSet` (with any desired parameters) directly on its declaration.
 
 The processor emits a compile-time error if `@Target(AnnotationTarget.CLASS)` is

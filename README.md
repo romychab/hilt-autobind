@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.7.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.7.0")
+    implementation("com.uandcode:hilt-autobind:0.8.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.8.0")
 }
 ```
 
@@ -65,6 +65,7 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | Feature                                              | Annotation / parameter          | Description                                                                         |
 |------------------------------------------------------|---------------------------------|-------------------------------------------------------------------------------------|
 | [Basic binding](docs/basic-usage.md)                 | `@AutoBinds`                    | Generates `@Binds` modules for interface implementations                            |
+| [Object binding](docs/basic-usage.md#object-binding) | `@AutoBinds`                    | Generates `@Provides` modules for Kotlin `object` declarations                      |
 | [Scopes & components](docs/scopes-and-components.md) | `installIn`                     | Auto-detects or explicitly sets the Hilt component                                  |
 | [Custom components](docs/custom-components.md)       | `installInCustomComponent`      | Installs bindings into custom Hilt components defined with `@DefineComponent`       |
 | [Class factory](docs/class-factory.md)               | `@AutoBinds(factory = ...)`     | Delegates instance creation to a `ClassBindingFactory` (e.g., Retrofit)             |
@@ -85,6 +86,7 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | **Supertype selection**              | ✅                                                                    | ✅                                                     | ✅                                                           |
 | **Multibinding**                     | ✅                                                                    | ✅                                                     | ❌                                                           |
 | **Custom Hilt components**           | ✅                                                                    | ✅                                                     | ✅                                                           |
+| **Kotlin `object` binding**          | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Auto-binding to multiple types**   | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Combine basic-/multi- binding**    | ✅                                                                    | ❌                                                     | ❌                                                           |
 | **Binding by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |

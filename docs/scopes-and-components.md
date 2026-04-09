@@ -45,7 +45,7 @@ class SearchRepository @Inject constructor(
 ```
 
 This works with all `@AutoBinds`, `@AutoBindsIntoSet`, and `@AutoBindsIntoMap`
-annotations.
+annotations, including when applied to Kotlin `object` declarations.
 
 ## Scope Validation
 
