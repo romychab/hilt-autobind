@@ -93,6 +93,31 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | **Binding by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ⚠️ (`@FactoryMethod`)                                       |
 | **Annotation aliases**               | ✅                                                                    | ❌                                                     | ❌                                                           |
 
+## Troubleshooting (KSP build failures)
+
+If you encounter KSP errors when building a project that uses Hilt/Dagger or
+this library, try the following steps in order:
+
+1. **Stop the Gradle daemon** and rebuild:
+
+   ```bash
+   ./gradlew --stop
+   ```
+
+   Then trigger a build again from Android Studio or the command line.
+
+2. **If the error persists - clean and rebuild:**
+
+   In Android Studio: **Build -> Clean Project**, then **Build -> Rebuild Project**.
+
+   Or from the command line:
+
+   ```bash
+   ./gradlew clean assembleDebug
+   ```
+
+Stale KSP caches and daemon state are a common cause of spurious build failures after dependency or annotation changes.
+
 ## Requirements
 
 | Dependency            | Minimum version |

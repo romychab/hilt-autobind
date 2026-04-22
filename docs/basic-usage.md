@@ -10,6 +10,7 @@
 - [Selecting specific binding targets](#selecting-specific-binding-targets)
 - [Qualifier annotations](#qualifier-annotations)
 - [How it works](#how-it-works)
+- [Troubleshooting](#troubleshooting)
 - [Requirements for annotated classes and objects](#requirements-for-annotated-classes-and-objects)
 
 ## Single Interface Binding
@@ -237,6 +238,32 @@ that runs at compile time. For each class or object annotated with `@AutoBinds`,
 
 The generated modules are `internal`, so they don't pollute your module's
 public API.
+
+## Troubleshooting
+
+If you encounter KSP errors when building a project that uses Hilt/Dagger or
+this library, try the following steps in order:
+
+1. **Stop the Gradle daemon** and rebuild:
+
+   ```bash
+   ./gradlew --stop
+   ```
+
+   Then trigger a build again from Android Studio or the command line.
+
+2. **If the error persists - clean and rebuild:**
+
+   In Android Studio: **Build -> Clean Project**, then **Build -> Rebuild Project**.
+
+   Or from the command line:
+
+   ```bash
+   ./gradlew clean assembleDebug
+   ```
+
+Stale KSP caches and daemon state are a common cause of spurious build failures after dependency
+or annotation changes.
 
 ## Requirements for Annotated Classes and Objects
 
