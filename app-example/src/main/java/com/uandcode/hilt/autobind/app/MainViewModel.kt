@@ -6,18 +6,21 @@ import com.elveum.container.pendingContainer
 import com.elveum.container.subject.LazyFlowSubject
 import com.elveum.container.subject.listenReloadable
 import com.elveum.container.subject.reloadAsync
+import com.uandcode.hilt.autobind.app.debug.DebugPanel
 import com.uandcode.hilt.autobind.app.greeter.Greeter
 import com.uandcode.hilt.autobind.app.network.RandomImageApi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import java.util.Optional
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val randomImageApi: RandomImageApi,
     greeter: Greeter,
+    debugPanel: Optional<DebugPanel>,
 ) : ViewModel() {
 
     private val subject = LazyFlowSubject.create {
@@ -33,6 +36,8 @@ class MainViewModel @Inject constructor(
         )
 
     val greeting: String = greeter.greet("Hilt AutoBind")
+
+    val debugPanelAvailable: Boolean = debugPanel.isPresent
 
     fun loadImage() {
         subject.reloadAsync()

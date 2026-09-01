@@ -51,5 +51,5 @@ class RepositoryImpl @Inject constructor() : Repository
 - A custom scope annotation with no matching `@DefineComponent` class -> compile error with a hint
   to use `installInCustomComponent` explicitly.
 - All other features (qualifiers, `bindTo`, annotation aliases, `@AutoBindsIntoSet`,
-  `@AutoBindsIntoMap`, Kotlin `object` declarations) work with custom components
-  identically to standard Hilt components.
+  `@AutoBindsIntoMap`, `@AutoBindsOptionalOf`, Kotlin `object` declarations) work with
+  custom components identically to standard Hilt components.

@@ -17,7 +17,7 @@ When many classes share the same `@AutoBinds(factory = ...)` or `installIn`
 configuration, you can define a custom annotation that carries those parameters
 as defaults. Applying that annotation then has the same effect as applying
 `@AutoBinds` with the same arguments. The same alias mechanism is also supported
-for `@AutoBindsIntoSet` and `@AutoBindsIntoMap`.
+for `@AutoBindsIntoSet`, `@AutoBindsIntoMap`, and `@AutoBindsOptionalOf`.
 
 This is useful for reducing boilerplate when binding many classes through a
 shared factory (e.g., Retrofit interfaces):
@@ -344,7 +344,8 @@ scope annotations — are forwarded the same way as with `@AutoBinds` aliases.
 
 ## Requirements for Alias Annotations
 
-An annotation used as an `@AutoBinds`, `@AutoBindsIntoSet`, or `@AutoBindsIntoMap` alias must:
+An annotation used as an `@AutoBinds`, `@AutoBindsIntoSet`, `@AutoBindsIntoMap`, or
+`@AutoBindsOptionalOf` alias must:
 
 - Be an **annotation class** (declared with the `annotation class` keyword).
 - Declare **`@Target(AnnotationTarget.CLASS)`** so it can be applied to classes, objects, and interfaces.

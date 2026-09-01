@@ -10,6 +10,7 @@ import com.google.devtools.ksp.validate
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.AutoBindsIntoMap
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
+import com.uandcode.hilt.autobind.AutoBindsOptionalOf
 import com.uandcode.hilt.autobind.compiler.AutoBindException
 import kotlin.reflect.KClass
 
@@ -52,4 +53,5 @@ private val SingletonAnnotations = setOf(
     AutoBinds::class,
     AutoBindsIntoSet::class,
     AutoBindsIntoMap::class,
+    AutoBindsOptionalOf::class,
 )

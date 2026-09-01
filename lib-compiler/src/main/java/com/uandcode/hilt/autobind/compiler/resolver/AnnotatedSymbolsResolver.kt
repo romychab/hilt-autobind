@@ -31,11 +31,13 @@ internal class AnnotatedSymbolsResolver(
     val autoBindsResolver = AutoBindsResolver(hiltModuleGenerator, customComponentResolver)
     val autoBindsIntoSetResolver = AutoBindsIntoSetResolver(hiltModuleGenerator, customComponentResolver)
     val autoBindsIntoMapResolver = AutoBindsIntoMapResolver(hiltModuleGenerator, customComponentResolver)
+    val autoBindsOptionalOfResolver = AutoBindsOptionalOfResolver(hiltModuleGenerator, customComponentResolver)
 
     val allResolvers = setOf(
         autoBindsResolver,
         autoBindsIntoSetResolver,
         autoBindsIntoMapResolver,
+        autoBindsOptionalOfResolver,
     )
 
     fun processAnnotatedSymbols(resolver: Resolver): List<KSAnnotated> {
