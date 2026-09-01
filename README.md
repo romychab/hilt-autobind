@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.8.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.8.0")
+    implementation("com.uandcode:hilt-autobind:0.9.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.9.0")
 }
 ```
 
@@ -72,26 +72,28 @@ Manual modules are not needed anymore, and Hilt can now inject `UserRepository` 
 | [Delegate factory](docs/delegate-factory.md)         | `@AutoBinds(factory = ...)`     | Provides a class and its sub-dependencies via `DelegateBindingFactory` (e.g., Room) |
 | [Set multibinding](docs/multibinding-set.md)         | `@AutoBindsIntoSet`             | Contributes to a Dagger `Set` multibinding                                          |
 | [Map multibinding](docs/multibinding-map.md)         | `@AutoBindsIntoMap`             | Contributes to a Dagger `Map` multibinding with a `@MapKey`-annotated key           |
+| [Optional bindings](docs/optional-bindings.md)       | `@AutoBindsOptionalOf`          | Generates `@BindsOptionalOf` declarations so consumers can inject `Optional<T>`     |
 | [Qualifiers](docs/qualifiers.md)                     | `@Named` / custom `@Qualifier`  | Distinguishes multiple bindings of the same type with JSR-330 qualifier annotations |
 | [Annotation aliases](docs/annotation-aliases.md)     | `@AutoBinds` as meta-annotation | Define custom annotations that act as short aliases for `@AutoBinds`                |
 | [Multi-Module Projects](docs/multi-module.md)        | -                               | Per-module setup in multi-module projects                                           |
 
 ## Comparison with Similar Libraries
 
-| Feature                              | **Hilt AutoBind**                                                    | [hilt-binder](https://github.com/mars885/hilt-binder) | [android-hilt](https://github.com/sczerwinski/android-hilt) |
-|--------------------------------------|----------------------------------------------------------------------|-------------------------------------------------------|-------------------------------------------------------------|
-| **Basic `@Binds` generation**        | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Scope / component auto-detection** | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Qualifiers**                       | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Supertype selection**              | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Multibinding**                     | ✅                                                                    | ✅                                                     | ❌                                                           |
-| **Custom Hilt components**           | ✅                                                                    | ✅                                                     | ✅                                                           |
-| **Kotlin `object` binding**          | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Auto-binding to multiple types**   | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Combine basic-/multi- binding**    | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Binding by class (e.g. Retrofit)** | ✅                                                                    | ❌                                                     | ❌                                                           |
-| **Binding by delegate (e.g. Room)**  | ✅                                                                    | ❌                                                     | ⚠️ (`@FactoryMethod`)                                       |
-| **Annotation aliases**               | ✅                                                                    | ❌                                                     | ❌                                                           |
+| Feature                               | **Hilt AutoBind** | [hilt-binder](https://github.com/mars885/hilt-binder) | [android-hilt](https://github.com/sczerwinski/android-hilt) |
+|---------------------------------------|-------------------|-------------------------------------------------------|-------------------------------------------------------------|
+| **Basic `@Binds` generation**         | ✅                 | ✅                                                     | ✅                                                           |
+| **Scope / component auto-detection**  | ✅                 | ✅                                                     | ✅                                                           |
+| **Qualifiers**                        | ✅                 | ✅                                                     | ✅                                                           |
+| **Supertype selection**               | ✅                 | ✅                                                     | ✅                                                           |
+| **Multibinding**                      | ✅                 | ✅                                                     | ❌                                                           |
+| **Custom Hilt components**            | ✅                 | ✅                                                     | ✅                                                           |
+| **Optional bindings (`Optional<T>`)** | ✅                 | ❌                                                     | ❌                                                           |
+| **Kotlin `object` binding**           | ✅                 | ❌                                                     | ❌                                                           |
+| **Auto-binding to multiple types**    | ✅                 | ❌                                                     | ❌                                                           |
+| **Combine basic-/multi- binding**     | ✅                 | ❌                                                     | ❌                                                           |
+| **Binding by class (e.g. Retrofit)**  | ✅                 | ❌                                                     | ❌                                                           |
+| **Binding by delegate (e.g. Room)**   | ✅                 | ❌                                                     | ⚠️ (`@FactoryMethod`)                                       |
+| **Annotation aliases**                | ✅                 | ❌                                                     | ❌                                                           |
 
 ## Troubleshooting (KSP build failures)
 

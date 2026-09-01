@@ -3,6 +3,7 @@ package com.uandcode.hilt.autobind.metadata
 import com.uandcode.hilt.autobind.AutoBinds
 import com.uandcode.hilt.autobind.AutoBindsIntoMap
 import com.uandcode.hilt.autobind.AutoBindsIntoSet
+import com.uandcode.hilt.autobind.AutoBindsOptionalOf
 import com.uandcode.hilt.autobind.HiltComponent
 import com.uandcode.hilt.autobind.MetaAutoBindingInfo
 import com.uandcode.hilt.autobind.factories.AutoScoped
@@ -33,6 +34,10 @@ annotation class MultiModuleBindIntoMapActivity
 @Target(AnnotationTarget.CLASS)
 annotation class MultiModuleFactoryBinding
 
+@AutoBindsOptionalOf(installIn = HiltComponent.Activity)
+@Target(AnnotationTarget.CLASS)
+annotation class MultiModuleOptionalActivity
+
 class MultiModuleFactory @Inject constructor() : ClassBindingFactory {
     @AutoScoped
     override fun <T : Any> create(kClass: KClass<T>): T {
@@ -61,3 +66,8 @@ class __com__uandcode__hilt__autobind__metadata__MultiModuleBindIntoSetActivity
     qualifiedMetaAnnotationName = "com.uandcode.hilt.autobind.metadata.MultiModuleBindIntoMapActivity"
 )
 class __com__uandcode__hilt__autobind__metadata__MultiModuleBindIntoMapActivity
+
+@MetaAutoBindingInfo(
+    qualifiedMetaAnnotationName = "com.uandcode.hilt.autobind.metadata.MultiModuleOptionalActivity"
+)
+class __com__uandcode__hilt__autobind__metadata__MultiModuleOptionalActivity

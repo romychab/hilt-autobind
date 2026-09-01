@@ -35,6 +35,7 @@ nav:
   - Delegate Factory: delegate-factory.md
   - Set Multibinding: multibinding-set.md
   - Map Multibinding: multibinding-map.md
+  - Optional Bindings: optional-bindings.md
   - Qualifiers: qualifiers.md
   - Annotation Aliases: annotation-aliases.md
   - Multi-Module Projects: multi-module.md

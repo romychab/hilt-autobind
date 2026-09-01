@@ -20,6 +20,7 @@ internal class HiltModuleGenerator(
     private val delegateFactoryModuleGenerator = DelegateFactoryModuleGenerator(logger)
     private val intoSetModuleGenerator = IntoSetModuleGenerator(logger)
     private val intoMapModuleGenerator = IntoMapModuleGenerator(logger)
+    private val optionalOfModuleGenerator = OptionalOfModuleGenerator(logger)
 
     fun generateHiltModule(
         type: ModuleType,
@@ -33,6 +34,7 @@ internal class HiltModuleGenerator(
                 mapKeyAnnotationSpec = type.mapKeyAnnotationSpec,
                 isObject = type.isObject,
             )
+            ModuleType.OptionalOf -> optionalOfModuleGenerator.generate(moduleInfo)
             is ModuleType.ClassFactory -> classFactoryModuleGenerator.generate(
                 moduleInfo = moduleInfo,
                 factoryDeclaration = type.factoryDeclaration,

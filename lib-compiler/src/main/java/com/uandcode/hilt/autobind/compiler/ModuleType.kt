@@ -24,6 +24,9 @@ internal sealed class ModuleType {
         val isObject: Boolean,
     ) : ModuleType()
 
+    /** Generate an interface with a single `@BindsOptionalOf` function. */
+    data object OptionalOf : ModuleType()
+
     /** Generate an object with a `@Provides` function that delegates to a factory. */
     data class ClassFactory(
         val factoryDeclaration: KSClassDeclaration,
