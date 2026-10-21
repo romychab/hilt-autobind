@@ -102,4 +102,27 @@ class OptionalOfQualifierTest {
         result.assertCompilationError()
         assertTrue(result.messages.contains("has conflicting qualifiers"), result.messages)
     }
+
+    @Test
+    fun `error when class and alias carry Named qualifiers with different values`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsOptionalOf
+            import javax.inject.Named
+
+            @AutoBindsOptionalOf
+            @Named("api")
+            @Target(AnnotationTarget.CLASS)
+            annotation class OptionalDebug
+
+            @OptionalDebug
+            @Named("internal")
+            interface DebugPanel
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("has conflicting qualifiers"), result.messages)
+    }
 }

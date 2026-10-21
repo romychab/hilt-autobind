@@ -162,7 +162,7 @@ annotation class BindRetrofit
 ```
 
 As a result, every class annotated with `@BindRetrofit` generates a binding
-with `@RetrofitApi` qualifier on the `@Binds` function. See [Qualifiers](qualifiers.md#qualifiers-on-annotation-aliases)
+with `@RetrofitApi` qualifier on the `@Binds` function. See [Qualifiers](qualifiers.md#qualifier-conflict-rules)
 for conflict rules when both the alias and the annotated class carry qualifiers.
 
 ## Forwarding a Factory

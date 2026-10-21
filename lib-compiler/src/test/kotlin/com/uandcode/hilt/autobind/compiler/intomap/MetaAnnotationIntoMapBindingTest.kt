@@ -247,6 +247,34 @@ class MetaAnnotationIntoMapBindingTest {
     }
 
     @Test
+    fun `error when class and alias carry Named qualifiers with different values`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.multibindings.StringKey
+            import javax.inject.Inject
+            import javax.inject.Named
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @Named("api")
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @Named("internal")
+            @StringKey("plugin-1")
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("has conflicting qualifiers"), result.messages)
+    }
+
+    @Test
     fun `qualifier on alias is forwarded to generated Binds function`() {
         val source = SourceFile.kotlin("Test.kt", """
             package test
@@ -398,6 +426,319 @@ class MetaAnnotationIntoMapBindingTest {
               public fun bindToService(`impl`: ServiceImpl): Service
             }
         """.trimIndent())
+    }
+
+    @Test
+    fun `alias and class with same ClassKey compiles without conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.multibindings.ClassKey
+            import javax.inject.Inject
+
+            interface Handler
+
+            class Feature
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @ClassKey(Feature::class)
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @ClassKey(Feature::class)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        result.assertHasGeneratedFile("MyHandler__IntoMapModule.kt").assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import dagger.multibindings.ClassKey
+            import dagger.multibindings.IntoMap
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface MyHandler__IntoMapModule {
+              @Binds
+              @IntoMap
+              @ClassKey(`value` = Feature::class)
+              public fun bindToHandler(`impl`: MyHandler): Handler
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `error when alias and class have ClassKeys with different classes`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.multibindings.ClassKey
+            import javax.inject.Inject
+
+            interface Handler
+
+            class FeatureA
+            class FeatureB
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @ClassKey(FeatureA::class)
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @ClassKey(FeatureB::class)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("conflicting map keys: class and alias has keys " +
+                "of the same type, but with different values"), result.messages)
+    }
+
+    @Test
+    fun `alias and class with same enum MapKey compiles without conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+
+            enum class Screen { HOME, SETTINGS }
+
+            @MapKey
+            annotation class ScreenKey(val value: Screen)
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @ScreenKey(Screen.HOME)
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @ScreenKey(Screen.HOME)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        val generated = result.assertHasGeneratedFile("MyHandler__IntoMapModule.kt")
+        assertTrue(generated.contains("@ScreenKey(`value` = Screen.HOME)"), generated)
+    }
+
+    @Test
+    fun `error when alias and class have enum MapKeys with different entries`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+
+            enum class Screen { HOME, SETTINGS }
+
+            @MapKey
+            annotation class ScreenKey(val value: Screen)
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @ScreenKey(Screen.HOME)
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @ScreenKey(Screen.SETTINGS)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("conflicting map keys: class and alias has keys " +
+                "of the same type, but with different values"), result.messages)
+    }
+
+    @Test
+    fun `MapKeys that differ only in an omitted default value do not conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+
+            @MapKey(unwrapValue = false)
+            annotation class CustomKey(
+                val name: String,
+                val version: Int = 1,
+            )
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @CustomKey("plugin")
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @CustomKey("plugin", version = 1)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        result.assertHasGeneratedFile("MyHandler__IntoMapModule.kt")
+    }
+
+    @Test
+    fun `error when MapKeys differ from an omitted default value`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+
+            @MapKey(unwrapValue = false)
+            annotation class CustomKey(
+                val name: String,
+                val version: Int = 1,
+            )
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @CustomKey("plugin")
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @CustomKey("plugin", version = 2)
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("conflicting map keys: class and alias has keys " +
+                "of the same type, but with different values"), result.messages)
+    }
+
+    @Test
+    fun `MapKeys with equal nested annotation and array values do not conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+            import kotlin.reflect.KClass
+
+            annotation class Tag(val value: String)
+
+            @MapKey(unwrapValue = false)
+            annotation class CustomKey(
+                val tag: Tag,
+                val types: Array<KClass<*>>,
+            )
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @CustomKey(tag = Tag("a"), types = [String::class, Int::class])
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @CustomKey(types = [String::class, Int::class], tag = Tag("a"))
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        result.assertHasGeneratedFile("MyHandler__IntoMapModule.kt")
+    }
+
+    @Test
+    fun `error when MapKeys have different nested annotation values`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+            import kotlin.reflect.KClass
+
+            annotation class Tag(val value: String)
+
+            @MapKey(unwrapValue = false)
+            annotation class CustomKey(
+                val tag: Tag,
+                val types: Array<KClass<*>>,
+            )
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @CustomKey(tag = Tag("a"), types = [String::class])
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @CustomKey(tag = Tag("b"), types = [String::class])
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("conflicting map keys: class and alias has keys " +
+                "of the same type, but with different values"), result.messages)
+    }
+
+    @Test
+    fun `error when MapKeys have arrays with different classes`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoMap
+            import dagger.MapKey
+            import javax.inject.Inject
+            import kotlin.reflect.KClass
+
+            annotation class Tag(val value: String)
+
+            @MapKey(unwrapValue = false)
+            annotation class CustomKey(
+                val tag: Tag,
+                val types: Array<KClass<*>>,
+            )
+
+            interface Handler
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoMap
+            @CustomKey(tag = Tag("a"), types = [String::class, Int::class])
+            annotation class ContributeToMap
+
+            @ContributeToMap
+            @CustomKey(tag = Tag("a"), types = [Int::class, String::class])
+            class MyHandler @Inject constructor() : Handler
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("conflicting map keys: class and alias has keys " +
+                "of the same type, but with different values"), result.messages)
     }
 
     @Test
