@@ -267,6 +267,164 @@ class QualifierBindingTest {
     }
 
     @Test
+    fun `error when class and alias carry Named qualifiers with different values`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+            import javax.inject.Named
+
+            interface Repo
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @Named("api")
+            annotation class BindApi
+
+            @Named("internal")
+            @BindApi
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("has conflicting qualifiers"), result.messages)
+        assertTrue(result.messages.contains("@javax.inject.Named(`value` = \"internal\")"), result.messages)
+        assertTrue(result.messages.contains("@javax.inject.Named(`value` = \"api\")"), result.messages)
+    }
+
+    @Test
+    fun `error when @AutoBindsIntoSet class and alias carry Named qualifiers with different values`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBindsIntoSet
+            import javax.inject.Inject
+            import javax.inject.Named
+
+            interface Interceptor
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBindsIntoSet
+            @Named("api")
+            annotation class ContributeInterceptor
+
+            @Named("internal")
+            @ContributeInterceptor
+            class LoggingInterceptor @Inject constructor() : Interceptor
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertCompilationError()
+        assertTrue(result.messages.contains("has conflicting qualifiers"), result.messages)
+    }
+
+    @Test
+    fun `equal Named qualifiers on class and alias produce one qualifier annotation`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+            import javax.inject.Named
+
+            interface Repo
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @Named("a")
+            annotation class BindA
+
+            @Named("a")
+            @BindA
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+
+        val generated = result.assertHasGeneratedFile("RepoImplModule.kt")
+        generated.assertContent("""
+            package test
+
+            import dagger.Binds
+            import dagger.Module
+            import dagger.hilt.InstallIn
+            import dagger.hilt.components.SingletonComponent
+            import javax.inject.Named
+
+            @Module
+            @InstallIn(SingletonComponent::class)
+            internal interface RepoImplModule {
+              @Binds
+              @Named(`value` = "a")
+              public fun bindToRepo(`impl`: RepoImpl): Repo
+            }
+        """.trimIndent())
+    }
+
+    @Test
+    fun `qualifiers with the same arguments in a different order do not conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+            import javax.inject.Qualifier
+
+            @Qualifier
+            @Retention(AnnotationRetention.RUNTIME)
+            annotation class ForFeature(val a: Int, val b: String)
+
+            interface Repo
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @ForFeature(a = 1, b = "x")
+            annotation class BindFeature
+
+            @ForFeature(b = "x", a = 1)
+            @BindFeature
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        result.assertHasGeneratedFile("RepoImplModule.kt")
+    }
+
+    @Test
+    fun `qualifiers that differ only in a written out default value do not conflict`() {
+        val source = SourceFile.kotlin("Test.kt", """
+            package test
+
+            import com.uandcode.hilt.autobind.AutoBinds
+            import javax.inject.Inject
+            import javax.inject.Qualifier
+
+            @Qualifier
+            @Retention(AnnotationRetention.RUNTIME)
+            annotation class ForFeature(val name: String, val level: Int = 1)
+
+            interface Repo
+
+            @Target(AnnotationTarget.CLASS)
+            @AutoBinds
+            @ForFeature("x")
+            annotation class BindFeature
+
+            @ForFeature("x", level = 1)
+            @BindFeature
+            class RepoImpl @Inject constructor() : Repo
+        """.trimIndent())
+
+        val result = compile(source)
+        result.assertOk()
+        result.assertHasGeneratedFile("RepoImplModule.kt")
+    }
+
+    @Test
     fun `qualifier on @AutoBindsIntoSet class appears on @Binds @IntoSet function`() {
         val source = SourceFile.kotlin("Test.kt", """
             package test

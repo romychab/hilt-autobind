@@ -344,7 +344,21 @@ internal interface UserRepositoryImplModule {
 
 - A class may carry **at most one** qualifier annotation (directly or via alias).
 - An alias may carry **at most one** qualifier annotation.
-- If the class and its alias both carry **the same qualifier type**, no conflict is
-  reported and the qualifier is applied once.
+- If the class and its alias carry **the same qualifier with the same arguments**, no
+  conflict is reported and the qualifier is applied once.
+- If they carry **the same qualifier type with different arguments**, such as
+  `@Named("api")` and `@Named("internal")`, compilation fails.
 - If the class and its alias carry **different qualifier types**, the processor emits
   a compile-time error.
+
+```kotlin
+@Target(AnnotationTarget.CLASS)
+@AutoBinds
+@Named("api")
+annotation class BindApi
+
+// ERROR: conflicting qualifiers
+@BindApi
+@Named("internal")
+class UserRepositoryImpl @Inject constructor() : UserRepository
+```

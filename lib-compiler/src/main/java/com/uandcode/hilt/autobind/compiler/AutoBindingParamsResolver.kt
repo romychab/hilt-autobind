@@ -3,10 +3,13 @@ package com.uandcode.hilt.autobind.compiler
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.uandcode.hilt.autobind.HiltComponent
 import com.uandcode.hilt.autobind.compiler.Const.QUALIFIER_NAME
 import com.uandcode.hilt.autobind.compiler.Const.SCOPE_NAME
+import com.uandcode.hilt.autobind.compiler.resolver.base.annotationTypeName
 import com.uandcode.hilt.autobind.compiler.resolver.base.cast
+import com.uandcode.hilt.autobind.compiler.resolver.base.isSameAnnotationAs
 import com.uandcode.hilt.autobind.compiler.resolver.base.takeIfNoConflicts
 
 internal class AutoBindingParamsResolver(
@@ -33,7 +36,7 @@ internal class AutoBindingParamsResolver(
             findQualifierAnnotation(annotatedClass),
             findQualifierAnnotation(annotationSource),
             onConflict = { conflictingQualifiers ->
-                val conflictingNames = conflictingQualifiers.mapNotNull { it.qualifiedName }
+                val conflictingNames = conflictingQualifiers.map { it.annotation.toAnnotationSpec().toString() }
                 throw notMatchingQualifiersException(annotatedClass, conflictingNames, annotationName)
             }
         )
@@ -135,8 +138,8 @@ internal class AutoBindingParamsResolver(
         annotatedClass,
     )
 
-    private fun findQualifierAnnotation(annotatedClass: KSClassDeclaration): ResolvedAnnotation? {
-        return annotatedClass.findAnnotation(QUALIFIER_NAME)
+    private fun findQualifierAnnotation(annotatedClass: KSClassDeclaration): ResolvedQualifier? {
+        return annotatedClass.findAnnotation(QUALIFIER_NAME)?.let { ResolvedQualifier(it.annotation) }
     }
 
     private fun KSClassDeclaration.findAnnotation(shortTypeName: String): ResolvedAnnotation? {
@@ -191,14 +194,15 @@ internal class AutoBindingParamsResolver(
         declaration: KSClassDeclaration,
     ) {
         val qualifiedName = declaration.qualifiedName?.asString()
+    }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is ResolvedAnnotation) return false
-            if (qualifiedName != other.qualifiedName) return false
-            return true
-        }
+    // A data class would compare KSAnnotation instances; equals below compares argument values.
+    @Suppress("UseDataClass")
+    private class ResolvedQualifier(val annotation: KSAnnotation) {
 
-        override fun hashCode(): Int = qualifiedName.hashCode()
+        override fun equals(other: Any?): Boolean =
+            other is ResolvedQualifier && annotation.isSameAnnotationAs(other.annotation)
+
+        override fun hashCode(): Int = annotation.annotationTypeName().hashCode()
     }
 }

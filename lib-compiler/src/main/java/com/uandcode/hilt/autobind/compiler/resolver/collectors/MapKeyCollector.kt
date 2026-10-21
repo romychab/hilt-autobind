@@ -6,6 +6,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ksp.toAnnotationSpec
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.uandcode.hilt.autobind.compiler.AutoBindException
+import com.uandcode.hilt.autobind.compiler.resolver.base.isSameAnnotationAs
 import dagger.multibindings.ClassKey
 
 /**
@@ -49,7 +50,7 @@ internal class MapKeyCollector {
             else -> {
                 val finalClassKey = classKey!!
                 val finalAliasKey = aliasKey!!
-                if (keysAreEqual(finalClassKey, finalAliasKey)) {
+                if (finalClassKey.isSameAnnotationAs(finalAliasKey)) {
                     finalClassKey.toAnnotationSpec()
                 } else {
                     if (finalClassKey.shortName.asString() == finalAliasKey.shortName.asString()) {
@@ -91,16 +92,6 @@ internal class MapKeyCollector {
         }
 
         return found
-    }
-
-    private fun keysAreEqual(a: KSAnnotation, b: KSAnnotation): Boolean {
-        if (a.annotationType.resolve() != b.annotationType.resolve()) return false
-        if (a.arguments.size != b.arguments.size) return false
-        val aArgs = a.arguments.associateBy { it.name?.asString() }
-        val bArgs = b.arguments.associateBy { it.name?.asString() }
-        return aArgs.keys == bArgs.keys && aArgs.all { (aKey, aValue) ->
-            bArgs[aKey]?.value == aValue.value
-        }
     }
 
     private fun buildClassKeyFallback(annotatedClass: KSClassDeclaration): AnnotationSpec {

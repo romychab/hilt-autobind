@@ -21,8 +21,8 @@ Add dependencies to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.uandcode:hilt-autobind:0.9.0")
-    ksp("com.uandcode:hilt-autobind-compiler:0.9.0")
+    implementation("com.uandcode:hilt-autobind:0.10.0")
+    ksp("com.uandcode:hilt-autobind-compiler:0.10.0")
 }
 ```
 
